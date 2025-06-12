@@ -34,41 +34,75 @@
 
         <h2>Chamada para: {{ data_para_exibir }}</h2>
 
-        <div class="table-responsive-wrapper">
-            <!-- CORREÇÃO: O atributo 'action' foi alterado para apontar para a rota Flask 'registrar_chamada'. -->
-            <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada">
-                <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
+        <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada">
+            <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
+
+            {# --- LISTA DE CHAMADA PARA CRIANÇAS --- #}
+            <h3>Crianças</h3>
+            {% if pessoas_criancas %}
+            <div class="table-responsive-wrapper">
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
-                            <th>Tipo</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pessoa in pessoas %}
+                        {% for pessoa in pessoas_criancas %}
                         <tr>
                             <td>{{ pessoa.id }}</td>
                             <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
-                            <td>{{ pessoa.tipo_cadastro if pessoa.tipo_cadastro else 'N/A' }}</td>
                             <td>
                                 <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] == 'Presente' %}checked{% endif %} required> Presente</label><br>
                                 <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] == 'Falta' %}checked{% endif %}> Falta</label><br>
                                 <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] == 'Justificado' %}checked{% endif %}> Justificado</label>
                             </td>
                         </tr>
-                        {% else %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>Nenhuma criança cadastrada ou para esta data.</p>
+            {% endif %}
+
+            <hr> {# Separador entre as tabelas #}
+
+            {# --- LISTA DE CHAMADA PARA ADOLESCENTES --- #}
+            <h3>Adolescentes</h3>
+            {% if pessoas_adolescentes %}
+            <div class="table-responsive-wrapper">
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="4">Nenhuma pessoa cadastrada ainda. <a href="{{ url_for('cadastro') }}">Cadastre a primeira!</a></td>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pessoa in pessoas_adolescentes %}
+                        <tr>
+                            <td>{{ pessoa.id }}</td>
+                            <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                            <td>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] == 'Presente' %}checked{% endif %} required> Presente</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] == 'Falta' %}checked{% endif %}> Falta</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] == 'Justificado' %}checked{% endif %}> Justificado</label>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-                <button type="submit" class="save-button">Registrar Chamada</button>
-            </form>
-        </div>
+            </div>
+            {% else %}
+            <p>Nenhum adolescente cadastrado ou para esta data.</p>
+            {% endif %}
+
+            <button type="submit" class="save-button">Registrar Chamada</button>
+        </form>
     </div>
 </body>
 </html>
