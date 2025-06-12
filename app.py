@@ -501,3 +501,36 @@ def atualizar_chamada():
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         conn.close()
+
+@app.route('/atualizar_ou_criar_chamada', methods=['POST'])
+def atualizar_ou_criar_chamada():
+    pessoa_id = request.form.get('pessoa_id')
+    data_chamada = request.form.get('data_chamada')
+    status = request.form.get('status')
+    chamada_id = request.form.get('chamada_id')
+
+    if not pessoa_id or not data_chamada or not status:
+        return jsonify({'success': False, 'message': 'Dados incompletos.'}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            if chamada_id:
+                # Atualiza chamada existente
+                cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (status, chamada_id))
+            else:
+                # Verifica se já existe chamada para pessoa/data (evita duplicidade)
+                cursor.execute('SELECT id FROM chamadas WHERE pessoa_id = %s AND data = %s', (pessoa_id, data_chamada))
+                chamada_existente = cursor.fetchone()
+                if chamada_existente:
+                    cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (status, chamada_existente[0]))
+                else:
+                    cursor.execute('INSERT INTO chamadas (pessoa_id, data, status) VALUES (%s, %s, %s) RETURNING id', (pessoa_id, data_chamada, status))
+                    chamada_id = cursor.fetchone()[0]
+        conn.commit()
+        return jsonify({'success': True, 'chamada_id': chamada_id})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        conn.close()
