@@ -156,8 +156,10 @@ th, td {
     padding: 12px 8px;
     text-align: left;
     vertical-align: middle;
-    white-space: normal; /* Permite quebra de linha */
-    word-break: break-word; /* Quebra palavras longas */
+    max-width: 220px;
+    overflow-x: auto;      /* Ativa barra de rolagem horizontal na célula */
+    white-space: nowrap;   /* Não quebra linha, rola para o lado */
+    word-break: break-word;
     min-width: 90px; /* Largura mínima para evitar sobreposição */
     max-width: 220px; /* Limita largura para nomes grandes */
 }
@@ -250,11 +252,12 @@ th, td {
     padding: 12px 8px;
     text-align: left;
     vertical-align: middle;
-    white-space: nowrap; /* Impede quebra de linha automática */
-    word-break: break-word; /* Quebra palavras longas */
-    max-width: 220px; /* Limite de largura para cada célula */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
+    max-width: 220px;
+    overflow-x: auto;      /* Ativa barra de rolagem horizontal na célula */
+    white-space: nowrap;   /* Não quebra linha, rola para o lado */
+    word-break: break-word;
+    min-width: 90px; /* Largura mínima para evitar sobreposição */
+    max-width: 220px; /* Limita largura para nomes grandes */
 }
 
 /* Para colunas que precisam ser maiores (ex: nome, endereço) */
@@ -262,6 +265,7 @@ td:nth-child(2), th:nth-child(2),
 td:nth-child(3), th:nth-child(3),
 td:nth-child(5), th:nth-child(5) {
     max-width: 300px;
+    overflow-x: auto;
 }
 
 /* Responsividade extra para telas pequenas */
