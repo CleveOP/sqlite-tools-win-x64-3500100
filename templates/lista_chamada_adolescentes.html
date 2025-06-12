@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamada de Adolescentes - ONG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Chamada de Adolescentes</h1>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('cadastro') }}">Cadastro</a> |
+            <a href="{{ url_for('lista_pessoas') }}">Pessoas Cadastradas</a> |
+            <a href="{{ url_for('lista_chamada_criancas') }}">Chamada de Crianças</a> | {# Novo link #}
+            <a href="{{ url_for('lista_chamada_adolescentes') }}">Chamada de Adolescentes</a> | {# Link para esta página #}
+            <a href="{{ url_for('balanco_chamadas') }}">Balanço de Chamadas</a>
+        </nav>
+        <hr>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('lista_chamada_adolescentes') }}" method="get" class="data-selector">
+            <label for="data_selecionada">Selecionar data:</label>
+            <input type="date" id="data_selecionada" name="data" value="{{ data_para_exibir }}" onchange="this.form.submit()">
+        </form>
+
+        <h2>Chamada para Adolescentes em: {{ data_para_exibir }}</h2>
+
+        <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada_adolescentes">
+            <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
+
+            {% if pessoas_adolescentes %}
+            <div class="table-responsive-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pessoa in pessoas_adolescentes %}
+                        <tr>
+                            <td>{{ pessoa.id }}</td>
+                            <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                            <td>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] == 'Presente' %}checked{% endif %} required> Presente</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] == 'Falta' %}checked{% endif %}> Falta</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] == 'Justificado' %}checked{% endif %}> Justificado</label>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p>Nenhum adolescente cadastrado para chamada nesta data.</p>
+            {% endif %}
+
+            <button type="submit" class="save-button">Registrar Chamada de Adolescentes</button>
+        </form>
+    </div>
+</body>
+</html>
