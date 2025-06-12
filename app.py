@@ -103,7 +103,8 @@ def cadastro():
                 full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
                 foto.save(full_file_path_fs)
 
-                foto_path_for_db = os.path.join(app.config['UPLOAD_FOLDER'], filename_unique).replace('\\', '/')
+                # CORREÇÃO: Salva apenas 'fotos_pessoas/arquivo.jpg'
+                foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
 
@@ -192,7 +193,8 @@ def editar_pessoa(pessoa_id):
                 full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
                 nova_foto.save(full_file_path_fs)
 
-                foto_path_for_db = os.path.join(app.config['UPLOAD_FOLDER'], filename_unique).replace('\\', '/')
+                # CORREÇÃO: Salva apenas 'fotos_pessoas/arquivo.jpg'
+                foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
 
