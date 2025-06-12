@@ -1,16 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import sqlite3
+import psycopg2
 import os
 import secrets
 from datetime import datetime
 
 app = Flask(__name__)
-# A CHAVE SECRETA AGORA É LIDA DE UMA VARIÁVEL DE AMBIENTE (necessário para produção)
-# Em desenvolvimento local, se a variável não estiver definida, ela ainda pode ser gerada dinamicamente
-# ou você pode defini-la manualmente em um arquivo .env (não para produção)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 
-DATABASE = 'cadastro_pessoas.db'
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # Configuração para upload de fotos
 UPLOAD_FOLDER = 'static/fotos_pessoas'
@@ -22,8 +19,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 def create_table():
@@ -32,7 +28,7 @@ def create_table():
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS pessoas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL,
             telefone TEXT NOT NULL,
             email TEXT,
@@ -54,11 +50,10 @@ def create_table():
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS chamadas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pessoa_id INTEGER NOT NULL,
-            data TEXT NOT NULL,
-            status TEXT NOT NULL,
-            FOREIGN KEY (pessoa_id) REFERENCES pessoas (id) ON DELETE CASCADE
+            id SERIAL PRIMARY KEY,
+            pessoa_id INTEGER NOT NULL REFERENCES pessoas(id) ON DELETE CASCADE,
+            data DATE NOT NULL,
+            status TEXT NOT NULL
         )
     ''')
     conn.commit()
@@ -69,7 +64,6 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    # Redireciona para a página de cadastro como ponto de entrada inicial
     return redirect(url_for('cadastro'))
 
 @app.route('/cadastro', methods=('GET', 'POST'))
@@ -103,7 +97,6 @@ def cadastro():
                 full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
                 foto.save(full_file_path_fs)
 
-                # CORREÇÃO: Salva apenas 'fotos_pessoas/arquivo.jpg'
                 foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
@@ -113,21 +106,22 @@ def cadastro():
         else:
             conn = get_db_connection()
             try:
-                conn.execute('''
-                    INSERT INTO pessoas (
-                        nome, telefone, email, endereco, data_nascimento, foto_path,
+                with conn.cursor() as cursor:
+                    cursor.execute('''
+                        INSERT INTO pessoas (
+                            nome, telefone, email, endereco, data_nascimento, foto_path,
+                            sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
+                            nome_responsavel, telefone_responsavel
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ''', (
+                        nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
                         sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
                         nome_responsavel, telefone_responsavel
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
-                    sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
-                    nome_responsavel, telefone_responsavel
-                ))
+                    ))
                 conn.commit()
                 flash('Pessoa cadastrada com sucesso!', 'success')
                 return redirect(url_for('lista_pessoas'))
-            except sqlite3.Error as e:
+            except Exception as e:
                 flash(f'Erro ao cadastrar pessoa: {e}', 'error')
                 conn.rollback()
             finally:
@@ -138,14 +132,22 @@ def cadastro():
 @app.route('/lista_pessoas')
 def lista_pessoas():
     conn = get_db_connection()
-    pessoas = conn.execute('SELECT * FROM pessoas ORDER BY nome').fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM pessoas ORDER BY nome')
+        pessoas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas = [dict(zip(colnames, row)) for row in pessoas]
     conn.close()
     return render_template('lista_pessoas.html', pessoas=pessoas)
 
 @app.route('/editar_pessoa/<int:pessoa_id>', methods=('GET', 'POST'))
 def editar_pessoa(pessoa_id):
     conn = get_db_connection()
-    pessoa = conn.execute('SELECT * FROM pessoas WHERE id = ?', (pessoa_id,)).fetchone()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM pessoas WHERE id = %s', (pessoa_id,))
+        pessoa_row = cursor.fetchone()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoa = dict(zip(colnames, pessoa_row)) if pessoa_row else None
 
     if pessoa is None:
         flash('Pessoa não encontrada!', 'error')
@@ -193,7 +195,6 @@ def editar_pessoa(pessoa_id):
                 full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
                 nova_foto.save(full_file_path_fs)
 
-                # CORREÇÃO: Salva apenas 'fotos_pessoas/arquivo.jpg'
                 foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
@@ -202,22 +203,23 @@ def editar_pessoa(pessoa_id):
             flash('Nome e Telefone são campos obrigatórios!', 'error')
         else:
             try:
-                conn.execute('''
-                    UPDATE pessoas SET
-                        nome = ?, telefone = ?, email = ?, endereco = ?, data_nascimento = ?, foto_path = ?,
-                        sobrenome = ?, tipo_cadastro = ?, rua = ?, numero = ?, bairro = ?, cidade = ?, estado = ?, cep = ?,
-                        nome_responsavel = ?, telefone_responsavel = ?
-                    WHERE id = ?
-                ''', (
-                    nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
-                    sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
-                    nome_responsavel, telefone_responsavel,
-                    pessoa_id
-                ))
+                with conn.cursor() as cursor:
+                    cursor.execute('''
+                        UPDATE pessoas SET
+                            nome = %s, telefone = %s, email = %s, endereco = %s, data_nascimento = %s, foto_path = %s,
+                            sobrenome = %s, tipo_cadastro = %s, rua = %s, numero = %s, bairro = %s, cidade = %s, estado = %s, cep = %s,
+                            nome_responsavel = %s, telefone_responsavel = %s
+                        WHERE id = %s
+                    ''', (
+                        nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
+                        sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
+                        nome_responsavel, telefone_responsavel,
+                        pessoa_id
+                    ))
                 conn.commit()
                 flash('Pessoa atualizada com sucesso!', 'success')
                 return redirect(url_for('lista_pessoas'))
-            except sqlite3.Error as e:
+            except Exception as e:
                 flash(f'Erro ao atualizar pessoa: {e}', 'error')
                 conn.rollback()
             finally:
@@ -230,31 +232,26 @@ def editar_pessoa(pessoa_id):
 def excluir_pessoa(pessoa_id):
     conn = get_db_connection()
     try:
-        pessoa_para_excluir = conn.execute('SELECT foto_path FROM pessoas WHERE id = ?', (pessoa_id,)).fetchone()
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT foto_path FROM pessoas WHERE id = %s', (pessoa_id,))
+            pessoa_para_excluir = cursor.fetchone()
+            foto_path = pessoa_para_excluir[0] if pessoa_para_excluir else None
 
-        conn.execute('DELETE FROM pessoas WHERE id = ?', (pessoa_id,))
-        conn.commit()
+            cursor.execute('DELETE FROM pessoas WHERE id = %s', (pessoa_id,))
+            conn.commit()
 
-        if pessoa_para_excluir and pessoa_para_excluir['foto_path']:
-            caminho_completo_foto_fs = os.path.join(app.root_path, 'static', pessoa_para_excluir['foto_path'])
-            if os.path.exists(caminho_completo_foto_fs):
-                os.remove(caminho_completo_foto_fs)
+            if foto_path:
+                caminho_completo_foto_fs = os.path.join(app.root_path, 'static', foto_path)
+                if os.path.exists(caminho_completo_foto_fs):
+                    os.remove(caminho_completo_foto_fs)
 
         flash('Pessoa excluída com sucesso!', 'success')
-    except sqlite3.Error as e:
+    except Exception as e:
         flash(f'Erro ao excluir pessoa: {e}', 'error')
         conn.rollback()
     finally:
         conn.close()
     return redirect(url_for('lista_pessoas'))
-
-# REMOVEMOS A ROTA GENÉRICA /lista_chamada
-# @app.route('/lista_chamada', methods=['GET'])
-# def lista_chamada():
-#     # Esta rota não é mais necessária, será redirecionada ou removida.
-#     # Você pode redirecionar para uma das novas rotas de lista de chamada, por exemplo:
-#     # return redirect(url_for('lista_chamada_criancas'))
-#     pass # Mantém para indicar que a rota foi removida se quiser deixar um marcador.
 
 @app.route('/lista_chamada_criancas', methods=['GET'])
 def lista_chamada_criancas():
@@ -270,12 +267,15 @@ def lista_chamada_criancas():
     else:
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
-    # Buscar apenas crianças
-    pessoas_criancas = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome").fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
+        pessoas_criancas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
 
-    # Buscar os registros de chamada para a data selecionada
-    chamadas = conn.execute('SELECT pessoa_id, status FROM chamadas WHERE data = ?', (data_para_exibir,)).fetchall()
-    chamadas_map = {c['pessoa_id']: c['status'] for c in chamadas}
+        cursor.execute('SELECT pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        chamadas = cursor.fetchall()
+        chamadas_map = {c[0]: c[1] for c in chamadas}
 
     conn.close()
 
@@ -300,12 +300,15 @@ def lista_chamada_adolescentes():
     else:
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
-    # Buscar apenas adolescentes
-    pessoas_adolescentes = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome").fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome")
+        pessoas_adolescentes = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
 
-    # Buscar os registros de chamada para a data selecionada
-    chamadas = conn.execute('SELECT pessoa_id, status FROM chamadas WHERE data = ?', (data_para_exibir,)).fetchall()
-    chamadas_map = {c['pessoa_id']: c['status'] for c in chamadas}
+        cursor.execute('SELECT pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        chamadas = cursor.fetchall()
+        chamadas_map = {c[0]: c[1] for c in chamadas}
 
     conn.close()
 
@@ -330,11 +333,20 @@ def lista_chamada_dupla():
     else:
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
-    pessoas_criancas = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome").fetchall()
-    pessoas_adolescentes = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome").fetchall()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
+        pessoas_criancas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
 
-    chamadas = conn.execute('SELECT pessoa_id, status FROM chamadas WHERE data = ?', (data_para_exibir,)).fetchall()
-    chamadas_map = {c['pessoa_id']: c['status'] for c in chamadas}
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome")
+        pessoas_adolescentes = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
+
+        cursor.execute('SELECT pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        chamadas = cursor.fetchall()
+        chamadas_map = {c[0]: c[1] for c in chamadas}
 
     conn.close()
 
@@ -352,68 +364,74 @@ def registrar_chamada():
     data_chamada = request.form['data_chamada']
 
     try:
-        for key, value in request.form.items():
-            if key.startswith('status_'):
-                pessoa_id = key.split('_')[1]
-                status = value
-                # Verifica se já existe chamada para essa pessoa e data
-                existe = conn.execute(
-                    'SELECT 1 FROM chamadas WHERE pessoa_id = ? AND data = ?',
-                    (pessoa_id, data_chamada)
-                ).fetchone()
-                if not existe:
-                    conn.execute(
-                        'INSERT INTO chamadas (pessoa_id, data, status) VALUES (?, ?, ?)',
-                        (pessoa_id, data_chamada, status)
+        with conn.cursor() as cursor:
+            for key, value in request.form.items():
+                if key.startswith('status_'):
+                    pessoa_id = key.split('_')[1]
+                    status = value
+                    cursor.execute(
+                        'SELECT 1 FROM chamadas WHERE pessoa_id = %s AND data = %s',
+                        (pessoa_id, data_chamada)
                     )
-        conn.commit()
+                    existe = cursor.fetchone()
+                    if not existe:
+                        cursor.execute(
+                            'INSERT INTO chamadas (pessoa_id, data, status) VALUES (%s, %s, %s)',
+                            (pessoa_id, data_chamada, status)
+                        )
+            conn.commit()
         flash('Chamada registrada com sucesso!', 'success')
-    except sqlite3.Error as e:
+    except Exception as e:
         flash(f'Erro ao registrar chamada: {e}', 'error')
         conn.rollback()
     finally:
         conn.close()
 
-    # Agora redireciona para o cadastro
     return redirect(url_for('cadastro'))
 
 @app.route('/balanco_chamadas')
 def balanco_chamadas():
     conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute('''
+            SELECT
+                p.id,
+                p.nome,
+                p.sobrenome,
+                p.tipo_cadastro,
+                COUNT(c.id) AS total_chamadas_registradas,
+                SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
+                SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
+                SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados
+            FROM pessoas p
+            LEFT JOIN chamadas c ON p.id = c.pessoa_id
+            WHERE p.tipo_cadastro = 'Criança'
+            GROUP BY p.id, p.nome, p.sobrenome, p.tipo_cadastro
+            ORDER BY p.nome
+        ''')
+        balanco_criancas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        balanco_criancas = [dict(zip(colnames, row)) for row in balanco_criancas]
 
-    balanco_criancas = conn.execute('''
-        SELECT
-            p.id,
-            p.nome,
-            p.sobrenome,
-            p.tipo_cadastro,
-            COUNT(c.id) AS total_chamadas_registradas,
-            SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
-            SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
-            SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados
-        FROM pessoas p
-        LEFT JOIN chamadas c ON p.id = c.pessoa_id
-        WHERE p.tipo_cadastro = 'Criança'
-        GROUP BY p.id, p.nome, p.sobrenome, p.tipo_cadastro
-        ORDER BY p.nome
-    ''').fetchall()
-
-    balanco_adolescentes = conn.execute('''
-        SELECT
-            p.id,
-            p.nome,
-            p.sobrenome,
-            p.tipo_cadastro,
-            COUNT(c.id) AS total_chamadas_registradas,
-            SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
-            SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
-            SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados
-        FROM pessoas p
-        LEFT JOIN chamadas c ON p.id = c.pessoa_id
-        WHERE p.tipo_cadastro = 'Adolescente'
-        GROUP BY p.id, p.nome, p.sobrenome, p.tipo_cadastro
-        ORDER BY p.nome
-    ''').fetchall()
+        cursor.execute('''
+            SELECT
+                p.id,
+                p.nome,
+                p.sobrenome,
+                p.tipo_cadastro,
+                COUNT(c.id) AS total_chamadas_registradas,
+                SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
+                SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
+                SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados
+            FROM pessoas p
+            LEFT JOIN chamadas c ON p.id = c.pessoa_id
+            WHERE p.tipo_cadastro = 'Adolescente'
+            GROUP BY p.id, p.nome, p.sobrenome, p.tipo_cadastro
+            ORDER BY p.nome
+        ''')
+        balanco_adolescentes = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        balanco_adolescentes = [dict(zip(colnames, row)) for row in balanco_adolescentes]
 
     conn.close()
     return render_template('balanco_chamadas.html',
