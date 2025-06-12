@@ -314,6 +314,36 @@ def lista_chamada_adolescentes():
         chamadas_map=chamadas_map
     )
 
+@app.route('/lista_chamada_dupla', methods=['GET'])
+def lista_chamada_dupla():
+    conn = get_db_connection()
+
+    data_selecionada_str = request.args.get('data')
+    if data_selecionada_str:
+        try:
+            data_para_exibir = datetime.strptime(data_selecionada_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+        except ValueError:
+            flash('Data inválida.', 'error')
+            data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+    else:
+        data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+
+    pessoas_criancas = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome").fetchall()
+    pessoas_adolescentes = conn.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome").fetchall()
+
+    chamadas = conn.execute('SELECT pessoa_id, status FROM chamadas WHERE data = ?', (data_para_exibir,)).fetchall()
+    chamadas_map = {c['pessoa_id']: c['status'] for c in chamadas}
+
+    conn.close()
+
+    return render_template(
+        'lista_chamada_dupla.html',
+        pessoas_criancas=pessoas_criancas,
+        pessoas_adolescentes=pessoas_adolescentes,
+        data_para_exibir=data_para_exibir,
+        chamadas_map=chamadas_map
+    )
+
 @app.route('/registrar_chamada', methods=('POST',))
 def registrar_chamada():
     conn = get_db_connection()

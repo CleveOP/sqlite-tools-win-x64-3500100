@@ -454,6 +454,11 @@ button.save-button:hover {
     background-color: #5a6268;
 }
 
+/* Classes para destaque de faltas */
+.falta-alta { background-color: #da2020 !important; }      /* Vermelho claro */
+.falta-media { background-color: #e6c50a !important; }     /* Amarelo claro */
+.falta-baixa { background-color: #10e010 !important; }     /* Verde claro */
+
 
 /* Media Queries para Responsividade */
 @media (max-width: 768px) {

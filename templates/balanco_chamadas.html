@@ -13,7 +13,8 @@
         <nav class="main-nav">
             <a href="{{ url_for('cadastro') }}">Cadastro</a> |
             <a href="{{ url_for('lista_pessoas') }}">Pessoas Cadastradas</a> |
-            <a href="{{ url_for('lista_chamada') }}">Lista de Chamada</a>
+            <a href="{{ url_for('lista_chamada_criancas') }}">Chamada de Crianças</a> |
+            <a href="{{ url_for('lista_chamada_adolescentes') }}">Chamada de Adolescentes</a>
         </nav>
         <hr>
 
@@ -40,18 +41,28 @@
                         <th>Total Faltas</th>
                         <th>Total Justificados</th>
                         <th>Total Registros</th>
+                        <th> % Faltas </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in balanco_criancas %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
-                        <td>{{ item.total_presencas }}</td>
-                        <td>{{ item.total_faltas }}</td>
-                        <td>{{ item.total_justificados }}</td>
-                        <td>{{ item.total_chamadas_registradas }}</td>
-                    </tr>
+                        {% set perc_faltas = (item.total_faltas / item.total_chamadas_registradas * 100) if item.total_chamadas_registradas > 0 else 0 %}
+                        {% if perc_faltas > 25 %}
+                            {% set row_class = 'falta-alta' %}
+                        {% elif perc_faltas >= 25 %}
+                            {% set row_class = 'falta-media' %}
+                        {% else %}
+                            {% set row_class = 'falta-baixa' %}
+                        {% endif %}
+                        <tr class="{{ row_class }}">
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
+                            <td>{{ item.total_presencas }}</td>
+                            <td>{{ item.total_faltas }}</td>
+                            <td>{{ item.total_justificados }}</td>
+                            <td>{{ item.total_chamadas_registradas }}</td>
+                            <td>{{ "%.1f"|format(perc_faltas) }}%</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -75,18 +86,28 @@
                         <th>Total Faltas</th>
                         <th>Total Justificados</th>
                         <th>Total Registros</th>
+                        <th> % Faltas </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in balanco_adolescentes %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
-                        <td>{{ item.total_presencas }}</td>
-                        <td>{{ item.total_faltas }}</td>
-                        <td>{{ item.total_justificados }}</td>
-                        <td>{{ item.total_chamadas_registradas }}</td>
-                    </tr>
+                        {% set perc_faltas = (item.total_faltas / item.total_chamadas_registradas * 100) if item.total_chamadas_registradas > 0 else 0 %}
+                        {% if perc_faltas > 25 %}
+                            {% set row_class = 'falta-alta' %}
+                        {% elif perc_faltas >= 25 %}
+                            {% set row_class = 'falta-media' %}
+                        {% else %}
+                            {% set row_class = 'falta-baixa' %}
+                        {% endif %}
+                        <tr class="{{ row_class }}">
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
+                            <td>{{ item.total_presencas }}</td>
+                            <td>{{ item.total_faltas }}</td>
+                            <td>{{ item.total_justificados }}</td>
+                            <td>{{ item.total_chamadas_registradas }}</td>
+                            <td>{{ "%.1f"|format(perc_faltas) }}%</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
