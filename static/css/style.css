@@ -150,6 +150,81 @@ p {
     margin-bottom: 20px;
 }
 
+/* Tabelas: Quebra de texto e largura mínima para colunas */
+th, td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 8px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: normal; /* Permite quebra de linha */
+    word-break: break-word; /* Quebra palavras longas */
+    min-width: 90px; /* Largura mínima para evitar sobreposição */
+    max-width: 220px; /* Limita largura para nomes grandes */
+}
+
+/* Ajuste para colunas de nome, que podem ser maiores */
+td:nth-child(2), th:nth-child(2) {
+    min-width: 140px;
+    max-width: 300px;
+}
+
+/* Responsividade: tabela rola na horizontal em telas pequenas */
+.table-responsive-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Ajuste para formulários: inputs ocupam toda a largura disponível */
+form input[type="text"],
+form input[type="date"],
+form input[type="file"],
+form input[type="email"],
+form select,
+form textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 1em;
+}
+
+/* Labels sempre acima dos inputs em telas pequenas */
+@media (max-width: 768px) {
+    form {
+        grid-template-columns: 1fr;
+    }
+    form label,
+    form input,
+    form select,
+    form button,
+    .current-photo-section {
+        grid-column: span 1;
+        width: 100%;
+    }
+    th, td {
+        min-width: 80px;
+        max-width: 100vw;
+        font-size: 0.97em;
+    }
+}
+
+/* Ajuste para evitar sobreposição de botões ou campos */
+button, .button {
+    min-width: 110px;
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Ajuste para navegação principal em telas pequenas */
+@media (max-width: 500px) {
+    .main-nav a {
+        display: block;
+        margin: 8px 0;
+        padding: 10px;
+    }
+}
+
 /* Responsividade de tabelas: Wrapper para rolagem horizontal */
 .table-responsive-wrapper {
     width: 100%;
