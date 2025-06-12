@@ -352,16 +352,20 @@ def registrar_chamada():
     data_chamada = request.form['data_chamada']
 
     try:
-        conn.execute('DELETE FROM chamadas WHERE data = ?', (data_chamada,))
-
         for key, value in request.form.items():
             if key.startswith('status_'):
                 pessoa_id = key.split('_')[1]
                 status = value
-                conn.execute(
-                    'INSERT INTO chamadas (pessoa_id, data, status) VALUES (?, ?, ?)',
-                    (pessoa_id, data_chamada, status)
-                )
+                # Verifica se já existe chamada para essa pessoa e data
+                existe = conn.execute(
+                    'SELECT 1 FROM chamadas WHERE pessoa_id = ? AND data = ?',
+                    (pessoa_id, data_chamada)
+                ).fetchone()
+                if not existe:
+                    conn.execute(
+                        'INSERT INTO chamadas (pessoa_id, data, status) VALUES (?, ?, ?)',
+                        (pessoa_id, data_chamada, status)
+                    )
         conn.commit()
         flash('Chamada registrada com sucesso!', 'success')
     except sqlite3.Error as e:
@@ -370,10 +374,8 @@ def registrar_chamada():
     finally:
         conn.close()
 
-    # Redireciona para a página de chamada de crianças por padrão após o registro.
-    # Você pode ajustar esta lógica se quiser redirecionar para a página que enviou o formulário.
-    return redirect(url_for('lista_chamada_criancas', data=data_chamada))
-
+    # Agora redireciona para o cadastro
+    return redirect(url_for('cadastro'))
 
 @app.route('/balanco_chamadas')
 def balanco_chamadas():
