@@ -225,6 +225,53 @@ button, .button {
     }
 }
 
+/* --- AJUSTE PARA EVITAR INVASÃO DE CAMPOS NAS TABELAS --- */
+
+/* Wrapper para rolagem horizontal da tabela */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+/* Tabela com layout fixo para limitar largura das colunas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Importante para limitar largura das colunas */
+    margin-top: 20px;
+}
+
+/* Células com largura máxima, quebra de palavra e rolagem horizontal */
+th, td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 8px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap; /* Impede quebra de linha automática */
+    word-break: break-word; /* Quebra palavras longas */
+    max-width: 220px; /* Limite de largura para cada célula */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
+}
+
+/* Para colunas que precisam ser maiores (ex: nome, endereço) */
+td:nth-child(2), th:nth-child(2),
+td:nth-child(3), th:nth-child(3),
+td:nth-child(5), th:nth-child(5) {
+    max-width: 300px;
+}
+
+/* Responsividade extra para telas pequenas */
+@media (max-width: 768px) {
+    th, td {
+        font-size: 0.95em;
+        max-width: 120px;
+    }
+}
+
 /* Responsividade de tabelas: Wrapper para rolagem horizontal */
 .table-responsive-wrapper {
     width: 100%;
