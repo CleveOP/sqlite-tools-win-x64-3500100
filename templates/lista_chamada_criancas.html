@@ -1,3 +1,4 @@
+<!-- filepath: c:\Users\cleve\OneDrive\Área de Trabalho\sqlite-tools-win-x64-3500100\templates\lista_chamada_criancas.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -13,8 +14,8 @@
         <nav class="main-nav">
             <a href="{{ url_for('cadastro') }}">Cadastro</a> |
             <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
-            <a href="{{ url_for('lista_chamada_criancas') }}">Crianças</a> | {# Link para esta página #}
-            <a href="{{ url_for('lista_chamada_adolescentes') }}">Adolescentes</a> | {# Novo link #}
+            <a href="{{ url_for('lista_chamada_criancas') }}">Crianças</a> |
+            <a href="{{ url_for('lista_chamada_adolescentes') }}">Adolescentes</a> |
             <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
         </nav>
         <hr>
@@ -47,6 +48,7 @@
                             <th>ID</th>
                             <th>Nome</th>
                             <th>Status</th>
+                            <th>Editar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,9 +57,16 @@
                             <td>{{ pessoa.id }}</td>
                             <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                             <td>
-                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] == 'Presente' %}checked{% endif %} required> Presente</label><br>
-                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] == 'Falta' %}checked{% endif %}> Falta</label><br>
-                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] == 'Justificado' %}checked{% endif %}> Justificado</label>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %} required> Presente</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}> Falta</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}> Justificado</label>
+                            </td>
+                            <td>
+                                {% if chamadas_map[pessoa.id] %}
+                                    <a href="{{ url_for('editar_chamada', chamada_id=chamadas_map[pessoa.id]['id']) }}">Editar</a>
+                                {% else %}
+                                    -
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

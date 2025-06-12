@@ -256,7 +256,6 @@ def excluir_pessoa(pessoa_id):
 @app.route('/lista_chamada_criancas', methods=['GET'])
 def lista_chamada_criancas():
     conn = get_db_connection()
-
     data_selecionada_str = request.args.get('data')
     if data_selecionada_str:
         try:
@@ -273,9 +272,10 @@ def lista_chamada_criancas():
         colnames = [desc[0] for desc in cursor.description]
         pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
 
-        cursor.execute('SELECT pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        # ALTERAÇÃO: buscar também o id da chamada
+        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
         chamadas = cursor.fetchall()
-        chamadas_map = {c[0]: c[1] for c in chamadas}
+        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
 
     conn.close()
 
@@ -289,7 +289,6 @@ def lista_chamada_criancas():
 @app.route('/lista_chamada_adolescentes', methods=['GET'])
 def lista_chamada_adolescentes():
     conn = get_db_connection()
-
     data_selecionada_str = request.args.get('data')
     if data_selecionada_str:
         try:
@@ -306,9 +305,10 @@ def lista_chamada_adolescentes():
         colnames = [desc[0] for desc in cursor.description]
         pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
 
-        cursor.execute('SELECT pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        # ALTERAÇÃO: buscar também o id da chamada
+        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
         chamadas = cursor.fetchall()
-        chamadas_map = {c[0]: c[1] for c in chamadas}
+        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
 
     conn.close()
 
@@ -437,3 +437,48 @@ def balanco_chamadas():
     return render_template('balanco_chamadas.html',
                            balanco_criancas=balanco_criancas,
                            balanco_adolescentes=balanco_adolescentes)
+
+@app.route('/editar_chamada/<int:chamada_id>', methods=['GET', 'POST'])
+def editar_chamada(chamada_id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM chamadas WHERE id = %s', (chamada_id,))
+        chamada = cursor.fetchone()
+        colnames = [desc[0] for desc in cursor.description]
+        chamada = dict(zip(colnames, chamada)) if chamada else None
+
+        # Descobre o tipo da pessoa para redirecionar corretamente
+        tipo_cadastro = None
+        if chamada:
+            cursor.execute('SELECT tipo_cadastro FROM pessoas WHERE id = %s', (chamada['pessoa_id'],))
+            tipo_cadastro_row = cursor.fetchone()
+            if tipo_cadastro_row:
+                tipo_cadastro = tipo_cadastro_row[0]
+
+    if not chamada:
+        flash('Chamada não encontrada!', 'error')
+        conn.close()
+        return redirect(url_for('lista_chamada_criancas'))
+
+    if request.method == 'POST':
+        novo_status = request.form.get('status')
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (novo_status, chamada_id))
+            conn.commit()
+            flash('Chamada atualizada com sucesso!', 'success')
+            # Redireciona para a lista correta
+            if tipo_cadastro == 'Criança':
+                return redirect(url_for('lista_chamada_criancas'))
+            elif tipo_cadastro == 'Adolescente':
+                return redirect(url_for('lista_chamada_adolescentes'))
+            else:
+                return redirect(url_for('lista_chamada_criancas'))
+        except Exception as e:
+            flash(f'Erro ao atualizar chamada: {e}', 'error')
+            conn.rollback()
+        finally:
+            conn.close()
+
+    conn.close()
+    return render_template('editar_chamada.html', chamada=chamada)
