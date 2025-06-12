@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import psycopg2
 import os
 import secrets
@@ -482,3 +482,22 @@ def editar_chamada(chamada_id):
 
     conn.close()
     return render_template('editar_chamada.html', chamada=chamada)
+
+@app.route('/atualizar_chamada', methods=['POST'])
+def atualizar_chamada():
+    chamada_id = request.form.get('chamada_id')
+    novo_status = request.form.get('status')
+    if not chamada_id or not novo_status:
+        return jsonify({'success': False, 'message': 'Dados incompletos.'}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (novo_status, chamada_id))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        conn.close()
