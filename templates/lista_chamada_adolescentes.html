@@ -104,10 +104,12 @@ function atualizarChamada(chamadaId, status, pessoaId) {
     .catch(() => {
         alert('Erro de conexão ao atualizar chamada.');
     });
+
+    // Para uso nos radios, exemplo de uso no input:
+// onclick="atualizarChamada('{{ chamadas_map[pessoa.id]['id'] }}', 'Presente', '{{ pessoa.id }}')"
 }
 
-// Para uso nos radios, exemplo de uso no input:
-// onclick="atualizarChamada('{{ chamadas_map[pessoa.id]['id'] }}', 'Presente', '{{ pessoa.id }}')"
+
 </script>
 </body>
 
