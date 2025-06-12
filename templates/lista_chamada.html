@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Chamada - ONG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Chamada</h1>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('cadastro') }}">Cadastro</a> |
+            <a href="{{ url_for('lista_pessoas') }}">Pessoas Cadastradas</a> |
+            <a href="{{ url_for('balanco_chamadas') }}">Balanço de Chamadas</a>
+        </nav>
+        <hr>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('lista_chamada') }}" method="get" class="data-selector">
+            <label for="data_selecionada">Selecionar data:</label>
+            <input type="date" id="data_selecionada" name="data" value="{{ data_para_exibir }}" onchange="this.form.submit()">
+        </form>
+
+        <h2>Chamada para: {{ data_para_exibir }}</h2>
+
+        <div class="table-responsive-wrapper">
+            <!-- CORREÇÃO: O atributo 'action' foi alterado para apontar para a rota Flask 'registrar_chamada'. -->
+            <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada">
+                <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pessoa in pessoas %}
+                        <tr>
+                            <td>{{ pessoa.id }}</td>
+                            <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                            <td>{{ pessoa.tipo_cadastro if pessoa.tipo_cadastro else 'N/A' }}</td>
+                            <td>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Presente" {% if chamadas_map[pessoa.id] == 'Presente' %}checked{% endif %} required> Presente</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Falta" {% if chamadas_map[pessoa.id] == 'Falta' %}checked{% endif %}> Falta</label><br>
+                                <label><input type="radio" name="status_{{ pessoa.id }}" value="Justificado" {% if chamadas_map[pessoa.id] == 'Justificado' %}checked{% endif %}> Justificado</label>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">Nenhuma pessoa cadastrada ainda. <a href="{{ url_for('cadastro') }}">Cadastre a primeira!</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="save-button">Registrar Chamada</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanço de Chamadas - ONG</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Balanço de Chamadas</h1>
+
+        <nav class="main-nav">
+            <a href="{{ url_for('cadastro') }}">Cadastro</a> |
+            <a href="{{ url_for('lista_pessoas') }}">Pessoas Cadastradas</a> |
+            <a href="{{ url_for('lista_chamada') }}">Lista de Chamada</a>
+        </nav>
+        <hr>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {# Balanço para CRIANÇAS #}
+        <h2>Balanço de Chamadas - Crianças</h2>
+        {% if balanco_criancas %}
+        <div class="table-responsive-wrapper">
+            <table id="balanco_criancas_table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome Completo</th>
+                        <th>Total Presenças</th>
+                        <th>Total Faltas</th>
+                        <th>Total Justificados</th>
+                        <th>Total Registros</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in balanco_criancas %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
+                        <td>{{ item.total_presencas }}</td>
+                        <td>{{ item.total_faltas }}</td>
+                        <td>{{ item.total_justificados }}</td>
+                        <td>{{ item.total_chamadas_registradas }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Nenhum registro de chamada encontrado para **Crianças**.</p>
+        {% endif %}
+
+        <hr> {# Separador entre as tabelas #}
+
+        {# Balanço para ADOLESCENTES #}
+        <h2>Balanço de Chamadas - Adolescentes</h2>
+        {% if balanco_adolescentes %}
+        <div class="table-responsive-wrapper">
+            <table id="balanco_adolescentes_table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome Completo</th>
+                        <th>Total Presenças</th>
+                        <th>Total Faltas</th>
+                        <th>Total Justificados</th>
+                        <th>Total Registros</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in balanco_adolescentes %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.nome }} {{ item.sobrenome if item.sobrenome else '' }}</td>
+                        <td>{{ item.total_presencas }}</td>
+                        <td>{{ item.total_faltas }}</td>
+                        <td>{{ item.total_justificados }}</td>
+                        <td>{{ item.total_chamadas_registradas }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Nenhum registro de chamada encontrado para **Adolescentes**.</p>
+        {% endif %}
+        
+    </div>
+</body>
+</html>

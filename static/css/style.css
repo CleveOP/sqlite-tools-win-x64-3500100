@@ -1,0 +1,500 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #eef2f7;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #0056b3;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+/* Formulário com layout de grade */
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    grid-column: span 2; /* Padrão de 2 colunas para labels */
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="file"],
+form input[type="email"], /* Adicionado input de email */
+form select,
+form textarea { /* Se houver textarea para endereço ou outros */
+    width: calc(100% - 20px); /* Ajusta para padding */
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    box-sizing: border-box; 
+    grid-column: span 2; /* Padrão de 2 colunas para inputs */
+}
+
+/* Sobrescreve para campos que devem ocupar apenas uma coluna */
+form label[for="nome"], form input#nome,
+form label[for="sobrenome"], form input#sobrenome,
+form label[for="data_nascimento"], form input#data_nascimento,
+form label[for="tipo_cadastro"], form select#tipo_cadastro,
+form label[for="numero"], form input#numero,
+form label[for="bairro"], form input#bairro,
+form label[for="cidade"], form input#cidade,
+form label[for="estado"], form input#estado,
+form label[for="cep"], form input#cep,
+form label[for="telefone"], form input#telefone,
+form label[for="telefone_responsavel"], form input#telefone_responsavel {
+    grid-column: span 1; 
+}
+
+/* Para garantir que os pares label-input fiquem lado a lado */
+form label[for="nome"] { grid-column: 1 / 2; }
+form input#nome { grid-column: 1 / 2; }
+form label[for="sobrenome"] { grid-column: 2 / 3; }
+form input#sobrenome { grid-column: 2 / 3; }
+
+form label[for="data_nascimento"] { grid-column: 1 / 2; }
+form input#data_nascimento { grid-column: 1 / 2; }
+form label[for="tipo_cadastro"] { grid-column: 2 / 3; }
+form select#tipo_cadastro { grid-column: 2 / 3; }
+
+form label[for="numero"] { grid-column: 1 / 2; }
+form input#numero { grid-column: 1 / 2; }
+form label[for="bairro"] { grid-column: 2 / 3; }
+form input#bairro { grid-column: 2 / 3; }
+
+form label[for="cidade"] { grid-column: 1 / 2; }
+form input#cidade { grid-column: 1 / 2; }
+form label[for="estado"] { grid-column: 2 / 3; }
+form input#estado { grid-column: 2 / 3; }
+
+form label[for="telefone"] { grid-column: 1 / 2; }
+form input#telefone { grid-column: 1 / 2; }
+form label[for="telefone_responsavel"] { grid-column: 2 / 3; }
+form input#telefone_responsavel { grid-column: 2 / 3; }
+
+form label[for="cep"] { grid-column: 1 / 2; }
+form input#cep { grid-column: 1 / 2; }
+
+
+/* Campos que ainda ocupam as duas colunas */
+form label[for="rua"], form input#rua,
+form label[for="email"], form input#email, /* Adicionado para email */
+form label[for="endereco"], form input#endereco, /* Se o campo 'endereco' for mantido como um único campo de texto grande */
+form label[for="nome_responsavel"], form input#nome_responsavel,
+form label[for="foto"], form input#foto,
+form button[type="submit"] {
+    grid-column: span 2;
+}
+
+/* Estilo geral para botões */
+button, .button { /* Adicionado .button para links com estilo de botão */
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-align: center; /* Para links agindo como botões */
+    text-decoration: none; /* Para links agindo como botões */
+    display: inline-block; /* Para links agindo como botões */
+}
+
+button:hover, .button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px); /* Pequeno efeito de elevação */
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: #ccc;
+    margin: 30px 0;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+p {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Responsividade de tabelas: Wrapper para rolagem horizontal */
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
+    -webkit-overflow-scrolling: touch; /* Melhora a rolagem em dispositivos iOS */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Sombra para o wrapper */
+    border-radius: 8px; /* Cantos arredondados para o wrapper */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    /* Remover box-shadow daqui, colocar no .table-responsive-wrapper */
+}
+
+th, td {
+    border: 1px solid #e0e0e0;
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap; /* Evita que o conteúdo da célula quebre linha */
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #555;
+    position: sticky; /* Fixa o cabeçalho ao rolar horizontalmente */
+    top: 0;
+    z-index: 10;
+}
+
+tr:nth-child(even) {
+    background-color: #fdfdfd;
+}
+
+tr:hover {
+    background-color: #f0f8ff;
+}
+
+td img {
+    max-width: 70px;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos específicos para botões dentro de tabelas */
+table button, table a.button { /* Aplica a botões e links que são botões na tabela */
+    padding: 8px 12px;
+    font-size: 0.9em;
+    margin-right: 5px;
+    display: inline-block; /* Garante que 'a' se comporte como 'button' */
+}
+
+.delete-button {
+    background-color: #dc3545; /* Vermelho para excluir */
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+.edit-button { /* Botão de Editar */
+    background-color: #ffc107; /* Amarelo/Laranja para editar */
+    color: #333; /* Texto escuro para melhor contraste */
+}
+
+.edit-button:hover {
+    background-color: #e0a800;
+}
+
+
+/* Estilos para mensagens flash */
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.flashes li {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.flashes .success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flashes .error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flashes .warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+/* Estilos para a navegação principal */
+.main-nav {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.main-nav a {
+    margin: 0 10px;
+    padding: 8px 12px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.main-nav a:hover {
+    background-color: #d6e0f0;
+}
+
+/* Estilo para o seletor de data na página de chamada */
+.data-selector {
+    text-align: center;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-wrap: wrap; /* Permite que os itens quebrem linha */
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Espaço entre os itens */
+}
+
+.data-selector label {
+    margin-right: 0; /* Removido margem lateral */
+    font-weight: bold;
+    color: #555;
+    white-space: nowrap; /* Evita que o texto quebre linha */
+}
+
+.data-selector input[type="date"] {
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1em;
+    max-width: 180px; /* Limita a largura do input de data */
+}
+
+/* Botão de salvar chamada */
+button.save-button {
+    margin-top: 20px;
+    background-color: #28a745; /* Verde para salvar */
+    grid-column: span 2; /* Ocupa as duas colunas no layout de grade */
+}
+button.save-button:hover {
+    background-color: #218838;
+}
+
+/* Ajustes para tabelas na lista de chamadas e balanço */
+#form_chamada table, .container table {
+    width: 100%;
+    margin-top: 15px;
+}
+#form_chamada td, .container td {
+    padding: 10px;
+}
+#form_chamada input[type="radio"] {
+    margin-right: 5px;
+}
+
+/* Estilos para a seção de foto atual no formulário de edição */
+.current-photo-section {
+    grid-column: span 2; 
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.current-photo-section p {
+    text-align: left; 
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.current-photo-section img {
+    max-width: 150px; 
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.current-photo-section label {
+    font-weight: normal;
+    margin-top: 0;
+    grid-column: span 1; 
+}
+.current-photo-section input[type="checkbox"] {
+    width: auto;
+    margin-right: 5px;
+    grid-column: span 1; 
+}
+
+/* Estilos para o modal de confirmação */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed; /* Fica por cima de tudo */
+    z-index: 1000; /* Alto z-index para estar na frente */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Permite rolagem se o conteúdo for muito grande */
+    background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+    justify-content: center; /* Usar flexbox para centralizar, mas apenas quando visível */
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto; /* Centraliza vertical e horizontalmente com flexbox */
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%; /* Largura padrão */
+    max-width: 500px; /* Largura máxima */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative; /* Para o botão de fechar */
+}
+
+.modal-content h2 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    text-align: center;
+    font-size: 1.1em;
+    margin-bottom: 25px;
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Espaço entre os botões */
+    margin-top: 20px;
+}
+
+.delete-confirm-button {
+    background-color: #dc3545; /* Vermelho para confirmar exclusão */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.delete-confirm-button:hover {
+    background-color: #c82333;
+}
+
+.cancel-button {
+    background-color: #6c757d; /* Cinza para cancelar */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
+
+/* Media Queries para Responsividade */
+@media (max-width: 768px) {
+    .container {
+        margin: 15px;
+        padding: 15px;
+    }
+
+    form {
+        grid-template-columns: 1fr; /* Empilha campos em uma única coluna */
+        gap: 10px;
+    }
+    form label,
+    form input,
+    form select,
+    form button,
+    .current-photo-section {
+        grid-column: span 1; /* Todos os itens ocupam uma coluna */
+        width: 100%; /* Garante que inputs e elementos preencham a largura */
+    }
+
+    /* Ajustes específicos para botões e links na tabela em telas pequenas */
+    table button, table a.button {
+        display: block; /* Cada botão em sua própria linha */
+        width: calc(100% - 10px); /* Ajusta a largura para o padding */
+        margin-bottom: 5px;
+        box-sizing: border-box; /* Inclui padding e borda na largura */
+        margin-right: 0; /* Remove margem lateral */
+    }
+
+    /* Garante que o wrapper de responsividade funcione */
+    .table-responsive-wrapper {
+        overflow-x: auto;
+    }
+
+    .modal-content {
+        width: 95%; /* Maior largura em telas pequenas */
+        padding: 20px;
+    }
+    .modal-buttons {
+        flex-direction: column; /* Botões empilhados no modal */
+        gap: 10px;
+    }
+}
