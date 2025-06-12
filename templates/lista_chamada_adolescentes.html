@@ -37,77 +37,73 @@
 
         <h2>Chamada para Adolescentes em: {{ data_para_exibir }}</h2>
 
-        <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada_adolescentes">
-            <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
-
-            {% if pessoas_adolescentes %}
-            <div class="table-responsive-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pessoa in pessoas_adolescentes %}
-                        <tr>
-                            <td>{{ pessoa.id }}</td>
-                            <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
-                            <td>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Presente"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}>
-                                    Presente
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Falta"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}>
-                                    Falta
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Justificado"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}>
-                                    Justificado
-                                </label>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p>Nenhum adolescente cadastrado para chamada nesta data.</p>
-            {% endif %}
-
-            <button type="submit" class="save-button">Registrar Chamada de Adolescentes</button>
-        </form>
+        {% if pessoas_adolescentes %}
+        <div class="table-responsive-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pessoa in pessoas_adolescentes %}
+                    <tr>
+                        <td>{{ pessoa.id }}</td>
+                        <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                        <td>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Presente"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Presente', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Presente
+                            </label><br>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Falta"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Falta', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Falta
+                            </label><br>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Justificado"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Justificado', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Justificado
+                            </label>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Nenhum adolescente cadastrado para chamada nesta data.</p>
+        {% endif %}
     </div>
-
-    <script>
-function atualizarChamada(chamadaId, status, pessoaId) {
-    fetch('{{ url_for("atualizar_chamada") }}', {
+<script>
+function atualizarOuCriarChamada(pessoaId, dataChamada, status, chamadaId) {
+    fetch('{{ url_for("atualizar_ou_criar_chamada") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: `chamada_id=${chamadaId}&status=${status}`
+        body: `pessoa_id=${pessoaId}&data_chamada=${dataChamada}&status=${status}&chamada_id=${chamadaId}`
     })
     .then(response => response.json())
     .then(data => {
         if (!data.success) {
-            alert('Erro ao atualizar chamada: ' + (data.message || ''));
+            alert('Erro ao salvar chamada: ' + (data.message || ''));
+        } else {
+            // location.reload(); // Descomente se quiser atualizar a página após salvar
         }
     })
     .catch(() => {
-        alert('Erro de conexão ao atualizar chamada.');
+        alert('Erro de conexão ao salvar chamada.');
     });
-
 }
-
-
 </script>
 </body>
+</html>
 
