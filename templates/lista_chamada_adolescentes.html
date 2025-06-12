@@ -84,3 +84,30 @@
             <button type="submit" class="save-button">Registrar Chamada de Adolescentes</button>
         </form>
     </div>
+
+    <script>
+function atualizarChamada(chamadaId, status, pessoaId) {
+    fetch('{{ url_for("atualizar_chamada") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `chamada_id=${chamadaId}&status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Erro ao atualizar chamada: ' + (data.message || ''));
+        }
+    })
+    .catch(() => {
+        alert('Erro de conexão ao atualizar chamada.');
+    });
+}
+
+// Para uso nos radios, exemplo de uso no input:
+// onclick="atualizarChamada('{{ chamadas_map[pessoa.id]['id'] }}', 'Presente', '{{ pessoa.id }}')"
+</script>
+</body>
+

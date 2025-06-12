@@ -37,52 +37,73 @@
 
         <h2>Chamada para Crianças em: {{ data_para_exibir }}</h2>
 
-        <form action="{{ url_for('registrar_chamada') }}" method="POST" id="form_chamada_criancas">
-            <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
-
-            {% if pessoas_criancas %}
-            <div class="table-responsive-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pessoa in pessoas_criancas %}
-                        <tr>
-                            <td>{{ pessoa.id }}</td>
-                            <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
-                            <td>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Presente"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}>
-                                    Presente
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Falta"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}>
-                                    Falta
-                                </label><br>
-                                <label>
-                                    <input type="radio" name="status_{{ pessoa.id }}" value="Justificado"
-                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}>
-                                    Justificado
-                                </label>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p>Nenhuma criança cadastrada para chamada nesta data.</p>
-            {% endif %}
-
-            <button type="submit" class="save-button">Registrar Chamada de Crianças</button>
-        </form>
+        {% if pessoas_criancas %}
+        <div class="table-responsive-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pessoa in pessoas_criancas %}
+                    <tr>
+                        <td>{{ pessoa.id }}</td>
+                        <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                        <td>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Presente"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Presente', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Presente
+                            </label><br>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Falta"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Falta', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Falta
+                            </label><br>
+                            <label>
+                                <input type="radio" name="status_{{ pessoa.id }}" value="Justificado"
+                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}
+                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Justificado', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
+                                Justificado
+                            </label>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Nenhuma criança cadastrada para chamada nesta data.</p>
+        {% endif %}
     </div>
 </body>
+<script>
+function atualizarOuCriarChamada(pessoaId, dataChamada, status, chamadaId) {
+    fetch('{{ url_for("atualizar_ou_criar_chamada") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `pessoa_id=${pessoaId}&data_chamada=${dataChamada}&status=${status}&chamada_id=${chamadaId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Erro ao salvar chamada: ' + (data.message || ''));
+        } else {
+            // Opcional: recarregar a página para atualizar os ids das chamadas
+            // location.reload();
+        }
+    })
+    .catch(() => {
+        alert('Erro de conexão ao salvar chamada.');
+    });
+}
+</script>
 </html>
