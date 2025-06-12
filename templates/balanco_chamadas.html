@@ -46,10 +46,13 @@
                 </thead>
                 <tbody>
                     {% for item in balanco_criancas %}
-                        {% set perc_faltas = (item.total_faltas / item.total_chamadas_registradas * 100) if item.total_chamadas_registradas > 0 else 0 %}
+                        {# Agora só conta faltas não justificadas! #}
+                        {% set faltas_nao_justificadas = item.total_faltas %}
+                        {% set total_chamadas = item.total_chamadas_registradas %}
+                        {% set perc_faltas = (faltas_nao_justificadas / total_chamadas * 100) if total_chamadas > 0 else 0 %}
                         {% if perc_faltas > 25 %}
                             {% set row_class = 'falta-alta' %}
-                        {% elif perc_faltas >= 25 %}
+                        {% elif perc_faltas >= 15 %}
                             {% set row_class = 'falta-media' %}
                         {% else %}
                             {% set row_class = 'falta-baixa' %}
