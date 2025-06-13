@@ -29,7 +29,6 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Foto</th>
                 <th>Nome</th>
                 <th>Telefone</th>
                 <th>Email</th>
@@ -41,9 +40,6 @@
             {% for pessoa in pessoas %}
             <tr>
                 <td>{{ pessoa.id }}</td>
-                <td>
-                    <img src="{{ url_for('imagem_pessoa', pessoa_id=pessoa.id) }}" alt="Foto" width="48" height="48" style="object-fit:cover; border-radius:50%;">
-                </td>
                 <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                 <td>{{ pessoa.telefone }}</td>
                 <td>{{ pessoa.email }}</td>
