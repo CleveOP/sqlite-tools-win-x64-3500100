@@ -13,6 +13,10 @@ def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
+@app.route('/')
+def index():
+    return redirect(url_for('lista_pessoas'))
+
 @app.route('/lista_pessoas')
 def lista_pessoas():
     conn = get_db_connection()
@@ -253,45 +257,6 @@ def balanco_chamadas():
         balanco = cursor.fetchall()
     conn.close()
     return render_template('balanco_chamadas.html', balanco=balanco)
-
-@app.route('/autocomplete_pessoas')
-def autocomplete_pessoas():
-    termo = request.args.get('q', '').strip()
-    if not termo:
-        return jsonify([])
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "SELECT nome, sobrenome FROM pessoas WHERE nome ILIKE %s OR sobrenome ILIKE %s ORDER BY nome LIMIT 10",
-            (f"{termo}%", f"{termo}%")
-        )
-        nomes = [f"{row[0]} {row[1]}" if row[1] else row[0] for row in cursor.fetchall()]
-    conn.close()
-    return jsonify(nomes)
-
-@app.route('/autocomplete_chamada')
-def autocomplete_chamada():
-    termo = request.args.get('q', '').strip()
-    tipo = request.args.get('tipo', '').strip()  # 'Criança' ou 'Adolescente'
-    if not termo or not tipo:
-        return jsonify([])
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT nome, sobrenome FROM pessoas
-            WHERE tipo_cadastro = %s
-              AND (
-                nome ILIKE %s OR sobrenome ILIKE %s
-              )
-            ORDER BY nome
-            LIMIT 10
-            """,
-            (tipo, f"{termo}%", f"{termo}%")
-        )
-        nomes = [f"{row[0]} {row[1]}" if row[1] else row[0] for row in cursor.fetchall()]
-    conn.close()
-    return jsonify(nomes)
 
 if __name__ == '__main__':
     app.run(debug=True)
