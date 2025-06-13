@@ -1,18 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 import psycopg2
 import os
 import secrets
 from datetime import datetime
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Configuração para upload de fotos
-UPLOAD_FOLDER = 'static/fotos_pessoas'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -34,7 +32,7 @@ def create_table():
             email TEXT,
             endereco TEXT,
             data_nascimento TEXT,
-            foto_path TEXT,
+            foto BYTEA,  -- campo para imagem binária
             sobrenome TEXT,
             tipo_cadastro TEXT,
             rua TEXT,
@@ -86,18 +84,11 @@ def cadastro():
         nome_responsavel = request.form.get('nome_responsavel')
         telefone_responsavel = request.form.get('telefone_responsavel')
 
-        foto_path_for_db = None
+        foto_bytes = None
         if 'foto' in request.files and request.files['foto'].filename != '':
             foto = request.files['foto']
             if foto and allowed_file(foto.filename):
-                upload_dir_fs = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-                os.makedirs(upload_dir_fs, exist_ok=True)
-
-                filename_unique = secrets.token_hex(8) + os.path.splitext(foto.filename)[1]
-                full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
-                foto.save(full_file_path_fs)
-
-                foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
+                foto_bytes = foto.read()
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
 
@@ -109,12 +100,12 @@ def cadastro():
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         INSERT INTO pessoas (
-                            nome, telefone, email, endereco, data_nascimento, foto_path,
+                            nome, telefone, email, endereco, data_nascimento, foto,
                             sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
                             nome_responsavel, telefone_responsavel
                         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (
-                        nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
+                        nome, telefone, email, endereco, data_nascimento, foto_bytes,
                         sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
                         nome_responsavel, telefone_responsavel
                     ))
@@ -139,6 +130,18 @@ def lista_pessoas():
         pessoas = [dict(zip(colnames, row)) for row in pessoas]
     conn.close()
     return render_template('lista_pessoas.html', pessoas=pessoas)
+
+@app.route('/imagem_pessoa/<int:pessoa_id>')
+def imagem_pessoa(pessoa_id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT foto FROM pessoas WHERE id = %s', (pessoa_id,))
+        row = cursor.fetchone()
+    conn.close()
+    if row and row[0]:
+        return send_file(BytesIO(row[0]), mimetype='image/png')
+    else:
+        return redirect(url_for('static', filename='img/sem_foto.png'))
 
 @app.route('/editar_pessoa/<int:pessoa_id>', methods=('GET', 'POST'))
 def editar_pessoa(pessoa_id):
@@ -172,30 +175,15 @@ def editar_pessoa(pessoa_id):
         nome_responsavel = request.form.get('nome_responsavel')
         telefone_responsavel = request.form.get('telefone_responsavel')
 
-        foto_path_for_db = pessoa['foto_path']
+        foto_bytes = pessoa['foto']
 
-        if request.form.get('remover_foto') == 'true' and foto_path_for_db:
-            full_file_path_fs = os.path.join(app.root_path, 'static', foto_path_for_db)
-            if os.path.exists(full_file_path_fs):
-                os.remove(full_file_path_fs)
-            foto_path_for_db = None
+        if request.form.get('remover_foto') == 'true':
+            foto_bytes = None
 
         if 'foto' in request.files and request.files['foto'].filename != '':
             nova_foto = request.files['foto']
             if nova_foto and allowed_file(nova_foto.filename):
-                upload_dir_fs = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
-                os.makedirs(upload_dir_fs, exist_ok=True)
-
-                if foto_path_for_db and request.form.get('remover_foto') != 'true':
-                    full_file_path_fs_old = os.path.join(app.root_path, 'static', foto_path_for_db)
-                    if os.path.exists(full_file_path_fs_old):
-                        os.remove(full_file_path_fs_old)
-
-                filename_unique = secrets.token_hex(8) + os.path.splitext(nova_foto.filename)[1]
-                full_file_path_fs = os.path.join(upload_dir_fs, filename_unique)
-                nova_foto.save(full_file_path_fs)
-
-                foto_path_for_db = os.path.join('fotos_pessoas', filename_unique).replace('\\', '/')
+                foto_bytes = nova_foto.read()
             else:
                 flash('Tipo de arquivo de foto não permitido!', 'error')
 
@@ -206,12 +194,12 @@ def editar_pessoa(pessoa_id):
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         UPDATE pessoas SET
-                            nome = %s, telefone = %s, email = %s, endereco = %s, data_nascimento = %s, foto_path = %s,
+                            nome = %s, telefone = %s, email = %s, endereco = %s, data_nascimento = %s, foto = %s,
                             sobrenome = %s, tipo_cadastro = %s, rua = %s, numero = %s, bairro = %s, cidade = %s, estado = %s, cep = %s,
                             nome_responsavel = %s, telefone_responsavel = %s
                         WHERE id = %s
                     ''', (
-                        nome, telefone, email, endereco, data_nascimento, foto_path_for_db,
+                        nome, telefone, email, endereco, data_nascimento, foto_bytes,
                         sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
                         nome_responsavel, telefone_responsavel,
                         pessoa_id
@@ -233,18 +221,8 @@ def excluir_pessoa(pessoa_id):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('SELECT foto_path FROM pessoas WHERE id = %s', (pessoa_id,))
-            pessoa_para_excluir = cursor.fetchone()
-            foto_path = pessoa_para_excluir[0] if pessoa_para_excluir else None
-
             cursor.execute('DELETE FROM pessoas WHERE id = %s', (pessoa_id,))
             conn.commit()
-
-            if foto_path:
-                caminho_completo_foto_fs = os.path.join(app.root_path, 'static', foto_path)
-                if os.path.exists(caminho_completo_foto_fs):
-                    os.remove(caminho_completo_foto_fs)
-
         flash('Pessoa excluída com sucesso!', 'success')
     except Exception as e:
         flash(f'Erro ao excluir pessoa: {e}', 'error')

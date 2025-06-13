@@ -1,22 +1,22 @@
+<!-- filepath: c:\Users\cleve\OneDrive\Área de Trabalho\sqlite-tools-win-x64-3500100\templates\lista_pessoas.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Pessoas - ONG</title>
+    <title>Lista de Pessoas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1> Pessoas Cadastradas</h1>
+        <h1>Lista de Pessoas</h1>
         <nav class="main-nav">
             <a href="{{ url_for('cadastro') }}">Cadastro</a> |
+            <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
             <a href="{{ url_for('lista_chamada_criancas') }}">Crianças</a> |
             <a href="{{ url_for('lista_chamada_adolescentes') }}">Adolescentes</a> |
             <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
         </nav>
         <hr>
-
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="flashes">
@@ -27,123 +27,41 @@
             {% endif %}
         {% endwith %}
 
-        {% if pessoas %}
-        <div class="table-responsive-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Foto</th>
-                        <th>Nome Completo</th>
-                        <th>Tipo</th>
-                        <th>Endereço Completo</th>
-                        <th>Telefone</th>
-                        <th>Responsável</th>
-                        <th>Tel. Resp.</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pessoa in pessoas %}
-                    <tr>
-                        <td>{{ pessoa.id }}</td>
-                        <td>
-                            {% if pessoa.foto_path %} {# CORREÇÃO: Usando pessoa.foto_path #}
-                                <img src="{{ url_for('static', filename=pessoa.foto_path) }}" alt="Foto de {{ pessoa.nome }}" width="50"> {# O Flask esperará o caminho relativo desde 'static', ex: 'fotos_pessoas/minhafoto.jpg' #}
-                            {% else %}
-                                <img src="{{ url_for('static', filename='images/placeholder-profile.png') }}" alt="Sem foto" width="50"> {# Adicionado placeholder #}
-                            {% endif %}
-                        </td>
-                        <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
-                        <td>{{ pessoa.tipo_cadastro if pessoa.tipo_cadastro else 'N/A' }}</td>
-                        <td>
-                            {% if pessoa.rua %}{{ pessoa.rua }}{% endif %}
-                            {% if pessoa.numero %}, {{ pessoa.numero }}{% endif %}
-                            {% if pessoa.bairro %} - {{ pessoa.bairro }}{% endif %}<br>
-                            {% if pessoa.cidade %}{{ pessoa.cidade }}{% endif %}
-                            {% if pessoa.estado %}/{{ pessoa.estado }}{% endif %}
-                            {% if pessoa.cep %} - {{ pessoa.cep }}{% endif %}
-                        </td>
-                        <td>{{ pessoa.telefone if pessoa.telefone else 'N/A' }}</td>
-                        <td>{{ pessoa.nome_responsavel if pessoa.nome_responsavel else 'N/A' }}</td>
-                        <td>{{ pessoa.telefone_responsavel if pessoa.telefone_responsavel else 'N/A' }}</td>
-                        <td>
-                            <!-- Botão de Excluir que abre o modal personalizado -->
-                            <button type="button" class="delete-button" 
-                                data-pessoa-id="{{ pessoa.id }}" 
-                                data-pessoa-nome="{{ pessoa.nome }}">Excluir</button>
-                            <a href="{{ url_for('editar_pessoa', pessoa_id=pessoa.id) }}" class="button edit-button">Editar</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p>Nenhuma pessoa cadastrada ainda. <a href="{{ url_for('cadastro') }}">Cadastre a primeira!</a></p>
-        {% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pessoa in pessoas %}
+                <tr>
+                    <td>
+                        {% if pessoa.foto %}
+                            <img src="{{ url_for('imagem_pessoa', pessoa_id=pessoa.id) }}" alt="Foto de {{ pessoa.nome }}" width="50">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/placeholder-profile.png') }}" alt="Sem foto" width="50">
+                        {% endif %}
+                    </td>
+                    <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                    <td>{{ pessoa.telefone }}</td>
+                    <td>{{ pessoa.email }}</td>
+                    <td>{{ pessoa.tipo_cadastro }}</td>
+                    <td>
+                        <a href="{{ url_for('editar_pessoa', pessoa_id=pessoa.id) }}">Editar</a> |
+                        <form action="{{ url_for('excluir_pessoa', pessoa_id=pessoa.id) }}" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta pessoa?');">
+                            <button type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-
-    {# --- INÍCIO DO BLOCO DE ELEMENTOS DO MODAL --- #}
-    {% block modal_elements %}
-    <!-- Modal de Confirmação de Exclusão -->
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Confirmar Exclusão</h2>
-            <p id="modalMessage"></p>
-            <div class="modal-buttons">
-                <button id="confirmDeleteBtn" class="delete-confirm-button">Confirmar</button>
-                <button id="cancelDeleteBtn" class="cancel-button">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('confirmationModal');
-            const closeButton = document.querySelector('.close-button');
-            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-            const modalMessage = document.getElementById('modalMessage');
-            let pessoaIdToDelete = null;
-            let pessoaNomeToDelete = null;
-
-            document.querySelectorAll('.delete-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    pessoaIdToDelete = this.dataset.pessoaId;
-                    pessoaNomeToDelete = this.dataset.pessoaNome;
-                    modalMessage.textContent = `Tem certeza que deseja excluir ${pessoaNomeToDelete}? Isso removerá todas as chamadas associadas também.`;
-                    modal.style.display = 'block';
-                });
-            });
-
-            closeButton.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-
-            cancelDeleteBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-
-            confirmDeleteBtn.addEventListener('click', function() {
-                if (pessoaIdToDelete) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `{{ url_for('excluir_pessoa', pessoa_id=0) }}`.replace('0', pessoaIdToDelete);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-
-            window.addEventListener('click', function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        });
-    </script>
-    {% endblock modal_elements %}
-    {# --- FIM DO BLOCO DE ELEMENTOS DO MODAL --- #}
 </body>
 </html>

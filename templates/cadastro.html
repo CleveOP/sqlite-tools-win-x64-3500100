@@ -1,14 +1,14 @@
+<!-- filepath: c:\Users\cleve\OneDrive\Área de Trabalho\sqlite-tools-win-x64-3500100\templates\cadastro.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ 'Editar Pessoa' if pessoa else 'Cadastrar Nova Pessoa' }} - ONG</title>
+    <title>Cadastro de Pessoa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>{{ 'Editar Pessoa' if pessoa else 'Cadastro' }}</h1>
+        <h1>{{ 'Editar Pessoa' if pessoa else 'Cadastro de Pessoa' }}</h1>
         <nav class="main-nav">
             <a href="{{ url_for('cadastro') }}">Cadastro</a> |
             <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
@@ -17,7 +17,6 @@
             <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
         </nav>
         <hr>
-
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="flashes">
@@ -28,68 +27,64 @@
             {% endif %}
         {% endwith %}
 
-        <!-- O atributo 'enctype="multipart/form-data"' é crucial para o upload de arquivos. -->
-        <!-- A action do formulário é definida pela rota Flask, que já lida com cadastro e edição. -->
-        <form method="POST" enctype="multipart/form-data">
-            {% if pessoa %}
-                <!-- Campo hidden para enviar o ID da pessoa ao editar -->
-                <input type="hidden" name="pessoa_id" value="{{ pessoa.id }}">
-            {% endif %}
-
+        <form method="post" enctype="multipart/form-data">
             <label for="nome">Nome:</label>
-            <input type="text" id="nome" name="nome" value="{{ pessoa.nome if pessoa else '' }}" required><br>
+            <input type="text" name="nome" id="nome" value="{{ pessoa.nome if pessoa else '' }}" required><br>
 
             <label for="sobrenome">Sobrenome:</label>
-            <input type="text" id="sobrenome" name="sobrenome" value="{{ pessoa.sobrenome if pessoa else '' }}"><br>
+            <input type="text" name="sobrenome" id="sobrenome" value="{{ pessoa.sobrenome if pessoa else '' }}"><br>
 
-            <!-- Campo de e-mail adicionado para corresponder ao backend -->
-            <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" value="{{ pessoa.email if pessoa else '' }}"><br>
+            <label for="telefone">Telefone:</label>
+            <input type="text" name="telefone" id="telefone" value="{{ pessoa.telefone if pessoa else '' }}" required><br>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" value="{{ pessoa.email if pessoa else '' }}"><br>
 
             <label for="data_nascimento">Data de Nascimento:</label>
-            <input type="date" id="data_nascimento" name="data_nascimento" value="{{ pessoa.data_nascimento if pessoa else '' }}"><br>
+            <input type="date" name="data_nascimento" id="data_nascimento" value="{{ pessoa.data_nascimento if pessoa else '' }}"><br>
 
             <label for="tipo_cadastro">Tipo de Cadastro:</label>
-            <select id="tipo_cadastro" name="tipo_cadastro" required>
+            <select name="tipo_cadastro" id="tipo_cadastro">
                 <option value="">Selecione</option>
-                <option value="Criança" {% if pessoa and pessoa.tipo_cadastro == 'Criança' %}selected{% endif %}>Criança</option>
-                <option value="Adolescente" {% if pessoa and pessoa.tipo_cadastro == 'Adolescente' %}selected{% endif %}>Adolescente</option>
+                <option value="crianca" {% if pessoa and pessoa.tipo_cadastro == 'crianca' %}selected{% endif %}>Criança</option>
+                <option value="adolescente" {% if pessoa and pessoa.tipo_cadastro == 'adolescente' %}selected{% endif %}>Adolescente</option>
+                <option value="adulto" {% if pessoa and pessoa.tipo_cadastro == 'adulto' %}selected{% endif %}>Adulto</option>
             </select><br>
 
             <label for="rua">Rua:</label>
-            <input type="text" id="rua" name="rua" value="{{ pessoa.rua if pessoa else '' }}"><br>
+            <input type="text" name="rua" id="rua" value="{{ pessoa.rua if pessoa else '' }}"><br>
 
             <label for="numero">Número:</label>
-            <input type="text" id="numero" name="numero" value="{{ pessoa.numero if pessoa else '' }}"><br>
+            <input type="text" name="numero" id="numero" value="{{ pessoa.numero if pessoa else '' }}"><br>
 
             <label for="bairro">Bairro:</label>
-            <input type="text" id="bairro" name="bairro" value="{{ pessoa.bairro if pessoa else '' }}"><br>
-            
-            <label for="cidade">Cidade:</label>
-            <input type="text" id="cidade" name="cidade" value="{{ pessoa.cidade if pessoa else '' }}"><br>
+            <input type="text" name="bairro" id="bairro" value="{{ pessoa.bairro if pessoa else '' }}"><br>
 
-            <label for="estado">Estado (UF):</label>
-            <input type="text" id="estado" name="estado" value="{{ pessoa.estado if pessoa else '' }}" maxlength="2"><br>
+            <label for="cidade">Cidade:</label>
+            <input type="text" name="cidade" id="cidade" value="{{ pessoa.cidade if pessoa else '' }}"><br>
+
+            <label for="estado">Estado:</label>
+            <input type="text" name="estado" id="estado" value="{{ pessoa.estado if pessoa else '' }}"><br>
 
             <label for="cep">CEP:</label>
-            <input type="text" id="cep" name="cep" value="{{ pessoa.cep if pessoa else '' }}" placeholder="00000-000"><br>
-
-            <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" name="telefone" value="{{ pessoa.telefone if pessoa else '' }}" placeholder="(DD) 99999-9999" required><br>
+            <input type="text" name="cep" id="cep" value="{{ pessoa.cep if pessoa else '' }}"><br>
 
             <label for="nome_responsavel">Nome do Responsável:</label>
-            <input type="text" id="nome_responsavel" name="nome_responsavel" value="{{ pessoa.nome_responsavel if pessoa else '' }}" required><br>
+            <input type="text" name="nome_responsavel" id="nome_responsavel" value="{{ pessoa.nome_responsavel if pessoa else '' }}"><br>
 
             <label for="telefone_responsavel">Telefone do Responsável:</label>
-            <input type="text" id="telefone_responsavel" name="telefone_responsavel" value="{{ pessoa.telefone_responsavel if pessoa else '' }}" placeholder="(DD) 99999-9999"><br>
+            <input type="text" name="telefone_responsavel" id="telefone_responsavel" value="{{ pessoa.telefone_responsavel if pessoa else '' }}"><br>
+
+            <label for="endereco">Endereço:</label>
+            <input type="text" name="endereco" id="endereco" value="{{ pessoa.endereco if pessoa else '' }}"><br>
 
             <label for="foto">Foto:</label>
-            <input type="file" id="foto" name="foto" accept="image/*"><br>
+            <input type="file" name="foto" id="foto" accept="image/*"><br>
 
-            {% if pessoa and pessoa.foto_path %}
+            {% if pessoa and pessoa.foto %}
             <div class="current-photo-section">
                 <p>Foto atual:</p>
-                <img src="{{ url_for('static', filename=pessoa.foto_path) }}" alt="Foto atual" width="100">
+                <img src="{{ url_for('imagem_pessoa', pessoa_id=pessoa.id) }}" alt="Foto atual" width="100">
                 <label>
                     <input type="checkbox" name="remover_foto" value="true"> Remover foto atual
                 </label>
