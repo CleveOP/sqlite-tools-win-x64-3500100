@@ -3,14 +3,12 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chamada de Crianças - ONG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Chamada de Crianças</h1>
-        
         <nav class="main-nav">
             <a href="{{ url_for('cadastro') }}">Cadastro</a> |
             <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
@@ -19,7 +17,6 @@
             <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
         </nav>
         <hr>
-
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class="flashes">
@@ -53,24 +50,28 @@
                         <td>{{ pessoa.id }}</td>
                         <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                         <td>
-                            <label>
-                                <input type="radio" name="status_{{ pessoa.id }}" value="Presente"
-                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}
-                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Presente', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
-                                Presente
-                            </label><br>
-                            <label>
-                                <input type="radio" name="status_{{ pessoa.id }}" value="Falta"
-                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}
-                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Falta', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
-                                Falta
-                            </label><br>
-                            <label>
-                                <input type="radio" name="status_{{ pessoa.id }}" value="Justificado"
-                                    {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}
-                                    onclick="atualizarOuCriarChamada('{{ pessoa.id }}', '{{ data_para_exibir }}', 'Justificado', '{{ chamadas_map[pessoa.id]['id'] if chamadas_map[pessoa.id] else '' }}')">
-                                Justificado
-                            </label>
+                            <form action="{{ url_for('atualizar_ou_criar_chamada') }}" method="post" style="display:inline;">
+                                <input type="hidden" name="pessoa_id" value="{{ pessoa.id }}">
+                                <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
+                                <label>
+                                    <input type="radio" name="status" value="Presente"
+                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Presente' %}checked{% endif %}
+                                        onchange="this.form.submit()">
+                                    Presente
+                                </label>
+                                <label>
+                                    <input type="radio" name="status" value="Falta"
+                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Falta' %}checked{% endif %}
+                                        onchange="this.form.submit()">
+                                    Falta
+                                </label>
+                                <label>
+                                    <input type="radio" name="status" value="Justificado"
+                                        {% if chamadas_map[pessoa.id] and chamadas_map[pessoa.id]['status'] == 'Justificado' %}checked{% endif %}
+                                        onchange="this.form.submit()">
+                                    Justificado
+                                </label>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -82,83 +83,4 @@
         {% endif %}
     </div>
 </body>
-<script>
-function atualizarOuCriarChamada(pessoaId, dataChamada, status, chamadaId) {
-    fetch('{{ url_for("atualizar_ou_criar_chamada") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: `pessoa_id=${pessoaId}&data_chamada=${dataChamada}&status=${status}&chamada_id=${chamadaId}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            alert('Erro ao salvar chamada: ' + (data.message || ''));
-        } else {
-            // Opcional: recarregar a página para atualizar os ids das chamadas
-            // location.reload();
-        }
-    })
-    .catch(() => {
-        alert('Erro de conexão ao salvar chamada.');
-    });
-}
-
-const buscaInput = document.getElementById('busca-nome');
-const autocompleteList = document.getElementById('autocomplete-list');
-const tipoCadastro = "Criança"; // Troque para "Adolescente" na tela de adolescentes
-
-buscaInput.addEventListener('input', function() {
-    const val = this.value;
-    if (!val || val.length < 1) {
-        autocompleteList.innerHTML = '';
-        return;
-    }
-    fetch(`/autocomplete_chamada?q=${encodeURIComponent(val)}&tipo=${encodeURIComponent(tipoCadastro)}`)
-        .then(resp => resp.json())
-        .then data => {
-            autocompleteList.innerHTML = '';
-            data.forEach(nome => {
-                // Só mostra se o nome ou sobrenome começa exatamente com o termo digitado (case-insensitive)
-                const termo = val.toLowerCase();
-                if (nome.toLowerCase().startsWith(termo)) {
-                    const item = document.createElement('div');
-                    item.textContent = nome;
-                    item.className = 'autocomplete-item';
-                    item.onclick = () => {
-                        buscaInput.value = nome;
-                        autocompleteList.innerHTML = '';
-                        buscaInput.form.submit(); // Envia o formulário automaticamente
-                    };
-                    autocompleteList.appendChild(item);
-                }
-            });
-        });
-});
-document.addEventListener('click', function(e) {
-    if (e.target !== buscaInput) {
-        autocompleteList.innerHTML = '';
-    }
-});
-</script>
-<style>
-.autocomplete-items {
-    position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    z-index: 99;
-    max-height: 200px;
-    overflow-y: auto;
-    width: 100%;
-}
-.autocomplete-item {
-    padding: 5px 10px;
-    cursor: pointer;
-}
-.autocomplete-item:hover {
-    background: #eee;
-}
-</style>
 </html>

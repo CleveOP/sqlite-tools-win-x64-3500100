@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
 import psycopg2
 import os
 import secrets
@@ -7,118 +7,22 @@ from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
-
 DATABASE_URL = os.environ.get('DATABASE_URL')
-
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-def allowed_file(filename):
-    return '.' in filename and \
-filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
-def create_table():
+@app.route('/lista_pessoas')
+def lista_pessoas():
     conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS pessoas (
-            id SERIAL PRIMARY KEY,
-            nome TEXT NOT NULL,
-            telefone TEXT NOT NULL,
-            email TEXT,
-            endereco TEXT,
-            data_nascimento TEXT,
-            foto BYTEA,
-            sobrenome TEXT,
-            tipo_cadastro TEXT,
-            rua TEXT,
-            numero TEXT,
-            bairro TEXT,
-            cidade TEXT,
-            estado TEXT,
-            cep TEXT,
-            nome_responsavel TEXT,
-            telefone_responsavel TEXT
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS chamadas (
-            id SERIAL PRIMARY KEY,
-            pessoa_id INTEGER NOT NULL REFERENCES pessoas(id) ON DELETE CASCADE,
-            data DATE NOT NULL,
-            status TEXT NOT NULL
-        )
-    ''')
-    conn.commit()
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM pessoas ORDER BY nome')
+        pessoas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas = [dict(zip(colnames, row)) for row in pessoas]
     conn.close()
-
-with app.app_context():
-    create_table()
-
-@app.route('/')
-def index():
-    return redirect(url_for('cadastro'))
-
-@app.route('/cadastro', methods=('GET', 'POST'))
-def cadastro():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        telefone = request.form['telefone']
-
-        email = request.form.get('email')
-        endereco = request.form.get('endereco')
-        data_nascimento = request.form.get('data_nascimento')
-        sobrenome = request.form.get('sobrenome')
-        tipo_cadastro = request.form.get('tipo_cadastro')
-        rua = request.form.get('rua')
-        numero = request.form.get('numero')
-        bairro = request.form.get('bairro')
-        cidade = request.form.get('cidade')
-        estado = request.form.get('estado')
-        cep = request.form.get('cep')
-        nome_responsavel = request.form.get('nome_responsavel')
-        telefone_responsavel = request.form.get('telefone_responsavel')
-
-        foto_bytes = None
-        if 'foto' in request.files and request.files['foto'].filename != '':
-            foto = request.files['foto']
-            if foto and allowed_file(foto.filename):
-                foto_bytes = foto.read()
-            else:
-                flash('Tipo de arquivo de foto não permitido!', 'error')
-
-        if not nome or not telefone:
-            flash('Nome e Telefone são campos obrigatórios!', 'error')
-        else:
-            conn = get_db_connection()
-            try:
-                with conn.cursor() as cursor:
-                    cursor.execute('''
-                        INSERT INTO pessoas (
-                            nome, telefone, email, endereco, data_nascimento, foto,
-                            sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
-                            nome_responsavel, telefone_responsavel
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ''', (
-                        nome, telefone, email, endereco, data_nascimento, foto_bytes,
-                        sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
-                        nome_responsavel, telefone_responsavel
-                    ))
-                conn.commit()
-                flash('Pessoa cadastrada com sucesso!', 'success')
-                return redirect(url_for('lista_pessoas'))
-            except Exception as e:
-                flash(f'Erro ao cadastrar pessoa: {e}', 'error')
-                conn.rollback()
-            finally:
-                conn.close()
-
-    return render_template('cadastro.html', pessoa=None)
+    return render_template('lista_pessoas.html', pessoas=pessoas)
 
 @app.route('/lista_chamada_criancas', methods=['GET'])
 def lista_chamada_criancas():
@@ -184,16 +88,61 @@ def lista_chamada_adolescentes():
         chamadas_map=chamadas_map
     )
 
-@app.route('/lista_pessoas')
-def lista_pessoas():
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        cursor.execute('SELECT * FROM pessoas ORDER BY nome')
-        pessoas = cursor.fetchall()
-        colnames = [desc[0] for desc in cursor.description]
-        pessoas = [dict(zip(colnames, row)) for row in pessoas]
-    conn.close()
-    return render_template('lista_pessoas.html', pessoas=pessoas)
+@app.route('/cadastro', methods=('GET', 'POST'))
+def cadastro():
+    if request.method == 'POST':
+        nome = request.form['nome']
+        telefone = request.form['telefone']
+
+        email = request.form.get('email')
+        endereco = request.form.get('endereco')
+        data_nascimento = request.form.get('data_nascimento')
+        sobrenome = request.form.get('sobrenome')
+        tipo_cadastro = request.form.get('tipo_cadastro')
+        rua = request.form.get('rua')
+        numero = request.form.get('numero')
+        bairro = request.form.get('bairro')
+        cidade = request.form.get('cidade')
+        estado = request.form.get('estado')
+        cep = request.form.get('cep')
+        nome_responsavel = request.form.get('nome_responsavel')
+        telefone_responsavel = request.form.get('telefone_responsavel')
+
+        foto_bytes = None
+        if 'foto' in request.files and request.files['foto'].filename != '':
+            foto = request.files['foto']
+            if foto and allowed_file(foto.filename):
+                foto_bytes = foto.read()
+            else:
+                flash('Tipo de arquivo de foto não permitido!', 'error')
+
+        if not nome or not telefone:
+            flash('Nome e Telefone são campos obrigatórios!', 'error')
+        else:
+            conn = get_db_connection()
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute('''
+                        INSERT INTO pessoas (
+                            nome, telefone, email, endereco, data_nascimento, foto,
+                            sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
+                            nome_responsavel, telefone_responsavel
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ''', (
+                        nome, telefone, email, endereco, data_nascimento, foto_bytes,
+                        sobrenome, tipo_cadastro, rua, numero, bairro, cidade, estado, cep,
+                        nome_responsavel, telefone_responsavel
+                    ))
+                conn.commit()
+                flash('Pessoa cadastrada com sucesso!', 'success')
+                return redirect(url_for('lista_pessoas'))
+            except Exception as e:
+                flash(f'Erro ao cadastrar pessoa: {e}', 'error')
+                conn.rollback()
+            finally:
+                conn.close()
+
+    return render_template('cadastro.html', pessoa=None)
 
 @app.route('/imagem_pessoa/<int:pessoa_id>')
 def imagem_pessoa(pessoa_id):

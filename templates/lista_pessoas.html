@@ -3,7 +3,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Pessoas</title>
+    <title>Lista de Pessoas - ONG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -30,7 +30,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Foto</th>
+                    <th>ID</th>
                     <th>Nome</th>
                     <th>Telefone</th>
                     <th>Email</th>
@@ -41,13 +41,7 @@
             <tbody>
                 {% for pessoa in pessoas %}
                 <tr>
-                    <td>
-                        {% if pessoa.foto %}
-                            <img src="{{ url_for('imagem_pessoa', pessoa_id=pessoa.id) }}" alt="Foto de {{ pessoa.nome }}" width="50">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='images/placeholder-profile.png') }}" alt="Sem foto" width="50">
-                        {% endif %}
-                    </td>
+                    <td>{{ pessoa.id }}</td>
                     <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                     <td>{{ pessoa.telefone }}</td>
                     <td>{{ pessoa.email }}</td>
