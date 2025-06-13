@@ -366,5 +366,21 @@ def autocomplete_pessoas():
     conn.close()
     return jsonify(nomes)
 
+@app.route('/autocomplete_chamada')
+def autocomplete_chamada():
+    termo = request.args.get('q', '').strip()
+    tipo = request.args.get('tipo', '').strip()  # 'Criança' ou 'Adolescente'
+    if not termo or not tipo:
+        return jsonify([])
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome LIMIT 10",
+            (tipo, f"{termo}%", f"{termo}%")
+        )
+        nomes = [f"{row[0]} {row[1]}" if row[1] else row[0] for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(nomes)
+
 if __name__ == '__main__':
     app.run(debug=True)
