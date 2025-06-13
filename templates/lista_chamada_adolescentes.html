@@ -30,10 +30,11 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('lista_chamada_adolescentes') }}" method="get" class="data-selector">
+        <form action="{{ url_for('lista_chamada_adolescentes') }}" method="get" class="data-selector" autocomplete="off" style="position:relative;">
             <label for="data_selecionada">Selecionar data:</label>
             <input type="date" id="data_selecionada" name="data" value="{{ data_para_exibir }}" onchange="this.form.submit()">
-            <input type="text" name="busca" placeholder="Buscar nome" value="{{ request.args.get('busca', '') }}">
+            <input type="text" id="busca-nome" name="busca" placeholder="Buscar nome" value="{{ request.args.get('busca', '') }}" autocomplete="off">
+            <div id="autocomplete-list" class="autocomplete-items"></div>
             <button type="submit">Buscar</button>
         </form>
 

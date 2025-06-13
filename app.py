@@ -351,5 +351,20 @@ def balanco_chamadas():
     conn.close()
     return render_template('balanco_chamadas.html', balanco=balanco)
 
+@app.route('/autocomplete_pessoas')
+def autocomplete_pessoas():
+    termo = request.args.get('q', '').strip()
+    if not termo:
+        return jsonify([])
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT nome, sobrenome FROM pessoas WHERE nome ILIKE %s OR sobrenome ILIKE %s ORDER BY nome LIMIT 10",
+            (f"{termo}%", f"{termo}%")
+        )
+        nomes = [f"{row[0]} {row[1]}" if row[1] else row[0] for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(nomes)
+
 if __name__ == '__main__':
     app.run(debug=True)
