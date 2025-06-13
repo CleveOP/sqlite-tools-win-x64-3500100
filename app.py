@@ -21,7 +21,7 @@ def index():
 def lista_pessoas():
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT * FROM pessoas ORDER BY nome')
+        cursor.execute('SELECT * FROM pessoas ORDER BY lower(nome)')
         pessoas = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas = [dict(zip(colnames, row)) for row in pessoas]
@@ -42,7 +42,7 @@ def lista_chamada_criancas():
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
     with conn.cursor() as cursor:
-        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY lower(nome)")
         pessoas_criancas = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
@@ -74,7 +74,7 @@ def lista_chamada_adolescentes():
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
     with conn.cursor() as cursor:
-        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome")
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY lower(nome)")
         pessoas_adolescentes = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
