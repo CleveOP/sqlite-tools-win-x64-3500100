@@ -258,5 +258,32 @@ def balanco_chamadas():
     conn.close()
     return render_template('balanco_chamadas.html', balanco=balanco)
 
+@app.route('/atualizar_ou_criar_chamada', methods=['POST'])
+def atualizar_ou_criar_chamada():
+    pessoa_id = request.form.get('pessoa_id')
+    data_chamada = request.form.get('data_chamada')
+    status = request.form.get('status')
+    if not pessoa_id or not data_chamada or not status:
+        flash('Dados incompletos para atualizar chamada.', 'error')
+        return redirect(request.referrer or url_for('lista_chamada_criancas'))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT id FROM chamadas WHERE pessoa_id = %s AND data = %s', (pessoa_id, data_chamada))
+            chamada_existente = cursor.fetchone()
+            if chamada_existente:
+                cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (status, chamada_existente[0]))
+            else:
+                cursor.execute('INSERT INTO chamadas (pessoa_id, data, status) VALUES (%s, %s, %s)', (pessoa_id, data_chamada, status))
+        conn.commit()
+        flash('Chamada atualizada!', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash(f'Erro ao atualizar chamada: {e}', 'error')
+    finally:
+        conn.close()
+    return redirect(request.referrer or url_for('lista_chamada_criancas'))
+
 if __name__ == '__main__':
     app.run(debug=True)
