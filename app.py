@@ -43,7 +43,7 @@ def lista_chamada_criancas():
 
     # Crianças
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY nome COLLATE "pt_BR.utf8"', ('Criança',))
+        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY lower(nome)', ('Criança',))
         pessoas_criancas = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
@@ -76,7 +76,7 @@ def lista_chamada_adolescentes():
 
     # Adolescentes
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY nome COLLATE "pt_BR.utf8"', ('Adolescente',))
+        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY lower(nome)', ('Adolescente',))
         pessoas_adolescentes = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
