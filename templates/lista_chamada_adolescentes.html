@@ -33,6 +33,8 @@
         <form action="{{ url_for('lista_chamada_adolescentes') }}" method="get" class="data-selector">
             <label for="data_selecionada">Selecionar data:</label>
             <input type="date" id="data_selecionada" name="data" value="{{ data_para_exibir }}" onchange="this.form.submit()">
+            <input type="text" name="busca" placeholder="Buscar nome" value="{{ request.args.get('busca', '') }}">
+            <button type="submit">Buscar</button>
         </form>
 
         <h2>Chamada para Adolescentes em: {{ data_para_exibir }}</h2>
@@ -106,4 +108,3 @@ function atualizarOuCriarChamada(pessoaId, dataChamada, status, chamadaId) {
 </script>
 </body>
 </html>
-
