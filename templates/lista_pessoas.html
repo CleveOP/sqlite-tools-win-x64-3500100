@@ -4,58 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Lista de Pessoas - ONG</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Lista de Pessoas</h1>
-        <nav class="main-nav">
-            <a href="{{ url_for('cadastro') }}">Cadastro</a> |
-            <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
-            <a href="{{ url_for('lista_chamada_criancas') }}">Crianças</a> |
-            <a href="{{ url_for('lista_chamada_adolescentes') }}">Adolescentes</a> |
-            <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
-        </nav>
-        <hr>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Telefone</th>
-                    <th>Email</th>
-                    <th>Tipo</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pessoa in pessoas %}
-                <tr>
-                    <td>{{ pessoa.id }}</td>
-                    <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
-                    <td>{{ pessoa.telefone }}</td>
-                    <td>{{ pessoa.email }}</td>
-                    <td>{{ pessoa.tipo_cadastro }}</td>
-                    <td>
-                        <a href="{{ url_for('editar_pessoa', pessoa_id=pessoa.id) }}">Editar</a> |
-                        <form action="{{ url_for('excluir_pessoa', pessoa_id=pessoa.id) }}" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta pessoa?');">
-                            <button type="submit">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
+    <h1>Lista de Pessoas</h1>
+    <nav>
+        <a href="{{ url_for('cadastro') }}">Cadastro</a> |
+        <a href="{{ url_for('lista_pessoas') }}">Cadastradas</a> |
+        <a href="{{ url_for('lista_chamada_criancas') }}">Crianças</a> |
+        <a href="{{ url_for('lista_chamada_adolescentes') }}">Adolescentes</a> |
+        <a href="{{ url_for('balanco_chamadas') }}">Balanço</a>
+    </nav>
+    <hr>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Foto</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pessoa in pessoas %}
+            <tr>
+                <td>{{ pessoa.id }}</td>
+                <td>
+                    <img src="{{ url_for('imagem_pessoa', pessoa_id=pessoa.id) }}" alt="Foto" width="48" height="48" style="object-fit:cover; border-radius:50%;">
+                </td>
+                <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
+                <td>{{ pessoa.telefone }}</td>
+                <td>{{ pessoa.email }}</td>
+                <td>{{ pessoa.tipo_cadastro }}</td>
+                <td>
+                    <a href="{{ url_for('editar_pessoa', pessoa_id=pessoa.id) }}">Editar</a> |
+                    <form action="{{ url_for('excluir_pessoa', pessoa_id=pessoa.id) }}" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir esta pessoa?');">
+                        <button type="submit">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

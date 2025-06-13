@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 import psycopg2
 import os
 import secrets
@@ -12,6 +12,9 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 def get_db_connection():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
 @app.route('/')
 def index():
@@ -41,9 +44,8 @@ def lista_chamada_criancas():
     else:
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
-    # Crianças
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY lower(nome)', ('Criança',))
+        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE lower(tipo_cadastro) = %s ORDER BY lower(nome)', ('criança',))
         pessoas_criancas = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
@@ -74,9 +76,8 @@ def lista_chamada_adolescentes():
     else:
         data_para_exibir = datetime.now().strftime('%Y-%m-%d')
 
-    # Adolescentes
     with conn.cursor() as cursor:
-        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s ORDER BY lower(nome)', ('Adolescente',))
+        cursor.execute('SELECT id, nome, sobrenome FROM pessoas WHERE lower(tipo_cadastro) = %s ORDER BY lower(nome)', ('adolescente',))
         pessoas_adolescentes = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
@@ -252,7 +253,6 @@ def excluir_pessoa(pessoa_id):
 
 @app.route('/balanco_chamadas')
 def balanco_chamadas():
-    # Exemplo simples, personalize conforme sua necessidade
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute('SELECT data, status, COUNT(*) FROM chamadas GROUP BY data, status ORDER BY data DESC')
