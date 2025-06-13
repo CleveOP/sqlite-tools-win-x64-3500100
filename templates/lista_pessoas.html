@@ -27,12 +27,6 @@
             {% endif %}
         {% endwith %}
 
-        <form method="get" action="{{ url_for('lista_pessoas') }}" autocomplete="off" style="position:relative;">
-            <input type="text" id="busca-nome" name="busca" placeholder="Digite o nome para buscar" value="{{ request.args.get('busca', '') }}" autocomplete="off">
-            <div id="autocomplete-list" class="autocomplete-items"></div>
-            <button type="submit">Buscar</button>
-        </form>
-
         <table>
             <thead>
                 <tr>
@@ -69,56 +63,5 @@
             </tbody>
         </table>
     </div>
-
-    <script>
-    const buscaInput = document.getElementById('busca-nome');
-    const autocompleteList = document.getElementById('autocomplete-list');
-
-    buscaInput.addEventListener('input', function() {
-        const val = this.value;
-        if (!val) {
-            autocompleteList.innerHTML = '';
-            return;
-        }
-        fetch(`/autocomplete_pessoas?q=${encodeURIComponent(val)}`)
-            .then(resp => resp.json())
-            .then(data => {
-                autocompleteList.innerHTML = '';
-                data.forEach(nome => {
-                    const item = document.createElement('div');
-                    item.textContent = nome;
-                    item.className = 'autocomplete-item';
-                    item.onclick = () => {
-                        buscaInput.value = nome;
-                        autocompleteList.innerHTML = '';
-                    };
-                    autocompleteList.appendChild(item);
-                });
-            });
-    });
-    document.addEventListener('click', function(e) {
-        if (e.target !== buscaInput) {
-            autocompleteList.innerHTML = '';
-        }
-    });
-    </script>
-    <style>
-    .autocomplete-items {
-        position: absolute;
-        background: #fff;
-        border: 1px solid #ccc;
-        z-index: 99;
-        max-height: 200px;
-        overflow-y: auto;
-        width: 100%;
-    }
-    .autocomplete-item {
-        padding: 5px 10px;
-        cursor: pointer;
-    }
-    .autocomplete-item:hover {
-        background: #eee;
-    }
-    </style>
 </body>
 </html>

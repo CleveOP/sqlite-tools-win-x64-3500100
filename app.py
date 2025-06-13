@@ -120,18 +120,75 @@ def cadastro():
 
     return render_template('cadastro.html', pessoa=None)
 
+@app.route('/lista_chamada_criancas', methods=['GET'])
+def lista_chamada_criancas():
+    conn = get_db_connection()
+    data_selecionada_str = request.args.get('data')
+    if data_selecionada_str:
+        try:
+            data_para_exibir = datetime.strptime(data_selecionada_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+        except ValueError:
+            flash('Data inválida.', 'error')
+            data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+    else:
+        data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
+        pessoas_criancas = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
+
+        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        chamadas = cursor.fetchall()
+        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
+
+    conn.close()
+
+    return render_template(
+        'lista_chamada_criancas.html',
+        pessoas_criancas=pessoas_criancas,
+        data_para_exibir=data_para_exibir,
+        chamadas_map=chamadas_map
+    )
+
+@app.route('/lista_chamada_adolescentes', methods=['GET'])
+def lista_chamada_adolescentes():
+    conn = get_db_connection()
+    data_selecionada_str = request.args.get('data')
+    if data_selecionada_str:
+        try:
+            data_para_exibir = datetime.strptime(data_selecionada_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+        except ValueError:
+            flash('Data inválida.', 'error')
+            data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+    else:
+        data_para_exibir = datetime.now().strftime('%Y-%m-%d')
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome")
+        pessoas_adolescentes = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
+
+        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
+        chamadas = cursor.fetchall()
+        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
+
+    conn.close()
+
+    return render_template(
+        'lista_chamada_adolescentes.html',
+        pessoas_adolescentes=pessoas_adolescentes,
+        data_para_exibir=data_para_exibir,
+        chamadas_map=chamadas_map
+    )
+
 @app.route('/lista_pessoas')
 def lista_pessoas():
-    busca = request.args.get('busca', '').strip()
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        if busca:
-            cursor.execute(
-                "SELECT * FROM pessoas WHERE nome ILIKE %s OR sobrenome ILIKE %s ORDER BY nome",
-                (f"%{busca}%", f"%{busca}%")
-            )
-        else:
-            cursor.execute('SELECT * FROM pessoas ORDER BY nome')
+        cursor.execute('SELECT * FROM pessoas ORDER BY nome')
         pessoas = cursor.fetchall()
         colnames = [desc[0] for desc in cursor.description]
         pessoas = [dict(zip(colnames, row)) for row in pessoas]
@@ -237,112 +294,6 @@ def excluir_pessoa(pessoa_id):
     finally:
         conn.close()
     return redirect(url_for('lista_pessoas'))
-
-@app.route('/lista_chamada_criancas', methods=['GET'])
-def lista_chamada_criancas():
-    conn = get_db_connection()
-    data_selecionada_str = request.args.get('data')
-    busca = request.args.get('busca', '').strip()
-    if data_selecionada_str:
-        try:
-            data_para_exibir = datetime.strptime(data_selecionada_str, '%Y-%m-%d').strftime('%Y-%m-%d')
-        except ValueError:
-            flash('Data inválida.', 'error')
-            data_para_exibir = datetime.now().strftime('%Y-%m-%d')
-    else:
-        data_para_exibir = datetime.now().strftime('%Y-%m-%d')
-
-    with conn.cursor() as cursor:
-        if busca:
-            cursor.execute(
-                "SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome",
-                (f"{busca}%", f"{busca}%")
-            )
-        else:
-            cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
-        pessoas_criancas = cursor.fetchall()
-        colnames = [desc[0] for desc in cursor.description]
-        pessoas_criancas = [dict(zip(colnames, row)) for row in pessoas_criancas]
-
-        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
-        chamadas = cursor.fetchall()
-        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
-
-    conn.close()
-
-    return render_template(
-        'lista_chamada_criancas.html',
-        pessoas_criancas=pessoas_criancas,
-        data_para_exibir=data_para_exibir,
-        chamadas_map=chamadas_map
-    )
-
-@app.route('/lista_chamada_adolescentes', methods=['GET'])
-def lista_chamada_adolescentes():
-    conn = get_db_connection()
-    data_selecionada_str = request.args.get('data')
-    busca = request.args.get('busca', '').strip()
-    if data_selecionada_str:
-        try:
-            data_para_exibir = datetime.strptime(data_selecionada_str, '%Y-%m-%d').strftime('%Y-%m-%d')
-        except ValueError:
-            flash('Data inválida.', 'error')
-            data_para_exibir = datetime.now().strftime('%Y-%m-%d')
-    else:
-        data_para_exibir = datetime.now().strftime('%Y-%m-%d')
-
-    with conn.cursor() as cursor:
-        if busca:
-            cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome", (f"%{busca}%", f"%{busca}%"))
-        else:
-            cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Adolescente' ORDER BY nome")
-        pessoas_adolescentes = cursor.fetchall()
-        colnames = [desc[0] for desc in cursor.description]
-        pessoas_adolescentes = [dict(zip(colnames, row)) for row in pessoas_adolescentes]
-
-        cursor.execute('SELECT id, pessoa_id, status FROM chamadas WHERE data = %s', (data_para_exibir,))
-        chamadas = cursor.fetchall()
-        chamadas_map = {c[1]: {'id': c[0], 'status': c[2]} for c in chamadas}
-
-    conn.close()
-
-    return render_template(
-        'lista_chamada_adolescentes.html',
-        pessoas_adolescentes=pessoas_adolescentes,
-        data_para_exibir=data_para_exibir,
-        chamadas_map=chamadas_map
-    )
-
-@app.route('/atualizar_ou_criar_chamada', methods=['POST'])
-def atualizar_ou_criar_chamada():
-    pessoa_id = request.form.get('pessoa_id')
-    data_chamada = request.form.get('data_chamada')
-    status = request.form.get('status')
-    chamada_id = request.form.get('chamada_id')
-
-    if not pessoa_id or not data_chamada or not status:
-        return jsonify({'success': False, 'message': 'Dados incompletos.'}), 400
-
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cursor:
-            if chamada_id:
-                cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (status, chamada_id))
-            else:
-                cursor.execute('SELECT id FROM chamadas WHERE pessoa_id = %s AND data = %s', (pessoa_id, data_chamada))
-                chamada_existente = cursor.fetchone()
-                if chamada_existente:
-                    cursor.execute('UPDATE chamadas SET status = %s WHERE id = %s', (status, chamada_existente[0]))
-                else:
-                    cursor.execute('INSERT INTO chamadas (pessoa_id, data, status) VALUES (%s, %s, %s) RETURNING id', (pessoa_id, data_chamada, status))
-                    chamada_id = cursor.fetchone()[0]
-        conn.commit()
-        return jsonify({'success': True, 'chamada_id': chamada_id})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
-        conn.close()
 
 @app.route('/balanco_chamadas')
 def balanco_chamadas():
