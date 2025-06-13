@@ -124,14 +124,19 @@ buscaInput.addEventListener('input', function() {
         .then(data => {
             autocompleteList.innerHTML = '';
             data.forEach(nome => {
-                const item = document.createElement('div');
-                item.textContent = nome;
-                item.className = 'autocomplete-item';
-                item.onclick = () => {
-                    buscaInput.value = nome;
-                    autocompleteList.innerHTML = '';
-                };
-                autocompleteList.appendChild(item);
+                // Só mostra se o nome ou sobrenome começa exatamente com o termo digitado (case-insensitive)
+                const termo = val.toLowerCase();
+                if (nome.toLowerCase().startsWith(termo)) {
+                    const item = document.createElement('div');
+                    item.textContent = nome;
+                    item.className = 'autocomplete-item';
+                    item.onclick = () => {
+                        buscaInput.value = nome;
+                        autocompleteList.innerHTML = '';
+                        buscaInput.form.submit(); // Envia o formulário automaticamente
+                    };
+                    autocompleteList.appendChild(item);
+                }
             });
         });
 });

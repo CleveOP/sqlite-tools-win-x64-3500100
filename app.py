@@ -254,7 +254,10 @@ def lista_chamada_criancas():
 
     with conn.cursor() as cursor:
         if busca:
-            cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome", (f"%{busca}%", f"%{busca}%"))
+            cursor.execute(
+                "SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome",
+                (f"{busca}%", f"{busca}%")
+            )
         else:
             cursor.execute("SELECT id, nome, sobrenome FROM pessoas WHERE tipo_cadastro = 'Criança' ORDER BY nome")
         pessoas_criancas = cursor.fetchall()
@@ -375,7 +378,15 @@ def autocomplete_chamada():
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute(
-            "SELECT nome, sobrenome FROM pessoas WHERE tipo_cadastro = %s AND (nome ILIKE %s OR sobrenome ILIKE %s) ORDER BY nome LIMIT 10",
+            """
+            SELECT nome, sobrenome FROM pessoas
+            WHERE tipo_cadastro = %s
+              AND (
+                nome ILIKE %s OR sobrenome ILIKE %s
+              )
+            ORDER BY nome
+            LIMIT 10
+            """,
             (tipo, f"{termo}%", f"{termo}%")
         )
         nomes = [f"{row[0]} {row[1]}" if row[1] else row[0] for row in cursor.fetchall()]

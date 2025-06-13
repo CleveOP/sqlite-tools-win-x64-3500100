@@ -30,7 +30,7 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('lista_chamada_adolescentes') }}" method="get" class="data-selector" autocomplete="off" style="position:relative;">
+        <form action="{{ url_for('lista_chamada_criancas') }}" method="get" class="data-selector" autocomplete="off" style="position:relative;">
             <label for="data_selecionada">Selecionar data:</label>
             <input type="date" id="data_selecionada" name="data" value="{{ data_para_exibir }}" onchange="this.form.submit()">
             <input type="text" id="busca-nome" name="busca" placeholder="Buscar nome" value="{{ request.args.get('busca', '') }}" autocomplete="off">
@@ -97,17 +97,22 @@ buscaInput.addEventListener('input', function() {
     }
     fetch(`/autocomplete_chamada?q=${encodeURIComponent(val)}&tipo=${encodeURIComponent(tipoCadastro)}`)
         .then(resp => resp.json())
-        .then data => {
+        .then(data => {
             autocompleteList.innerHTML = '';
             data.forEach(nome => {
-                const item = document.createElement('div');
-                item.textContent = nome;
-                item.className = 'autocomplete-item';
-                item.onclick = () => {
-                    buscaInput.value = nome;
-                    autocompleteList.innerHTML = '';
-                };
-                autocompleteList.appendChild(item);
+                // Só mostra se o nome ou sobrenome começa exatamente com o termo digitado (case-insensitive)
+                const termo = val.toLowerCase();
+                if (nome.toLowerCase().startsWith(termo)) {
+                    const item = document.createElement('div');
+                    item.textContent = nome;
+                    item.className = 'autocomplete-item';
+                    item.onclick = () => {
+                        buscaInput.value = nome;
+                        autocompleteList.innerHTML = '';
+                        buscaInput.form.submit(); // Envia o formulário automaticamente
+                    };
+                    autocompleteList.appendChild(item);
+                }
             });
         });
 });
