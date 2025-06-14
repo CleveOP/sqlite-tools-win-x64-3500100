@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <title>Chamada de Adolescentes - ONG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+    
+    {# Ordem CORRETA: CSS primeiro, depois jQuery Core JS, depois jQuery UI JS #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css') }}"> 
+    
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> {# <-- jQuery Core DEVE vir primeiro #}
+    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script> {# <-- jQuery UI vem DEPOIS do core #}
 </head>
 <body>
     <div class="container">
@@ -91,33 +94,31 @@
 
     <script>
         $(function() {
-            $("#search_adolescente").autocomplete({ // Altera o ID aqui
+            $("#search_adolescente").autocomplete({
                 source: function(request, response) {
                     $.ajax({
                         url: "{{ url_for('buscar_pessoas_autocomplete') }}",
                         dataType: "json",
                         data: {
                             term: request.term,
-                            tipo: 'adolescente' // Passa o tipo para a busca
+                            tipo: 'adolescente'
                         },
                         success: function(data) {
                             response(data);
                         }
                     });
                 },
-                minLength: 2, // Começa a buscar após 2 caracteres
+                minLength: 2,
                 select: function(event, ui) {
-                    // Quando um item é selecionado, rola até a linha da tabela correspondente
                     var pessoaId = ui.item.id;
                     var targetElement = $('#pessoa-' + pessoaId);
                     if (targetElement.length) {
                         $('html, body').animate({
-                            scrollTop: targetElement.offset().top - 100 // -100 para dar um respiro
+                            scrollTop: targetElement.offset().top - 100
                         }, 500);
-                        // Opcional: Adicionar um efeito visual (e.g., destaque)
-                        targetElement.css('background-color', '#ffff99'); // Cor de destaque
+                        targetElement.css('background-color', '#ffff99');
                         setTimeout(function() {
-                            targetElement.css('background-color', ''); // Remove o destaque
+                            targetElement.css('background-color', '');
                         }, 2000);
                     }
                 }

@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <title>Chamada de Crianças - ONG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+    
+    {# Ordem CORRETA: CSS do jQuery UI primeiro (com outros CSS), depois jQuery Core JS, depois jQuery UI JS #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css') }}"> 
+    
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> {# <-- jQuery Core DEVE vir primeiro #}
+    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script> {# <-- jQuery UI vem DEPOIS do core #}
 </head>
 <body>
     <div class="container">
@@ -105,9 +108,8 @@
                         }
                     });
                 },
-                minLength: 2, // Começa a buscar após 2 caracteres
+                minLength: 2,
                 select: function(event, ui) {
-                    // Quando um item é selecionado, rola até a linha da tabela correspondente
                     var pessoaId = ui.item.id;
                     var targetElement = $('#pessoa-' + pessoaId);
                     if (targetElement.length) {
