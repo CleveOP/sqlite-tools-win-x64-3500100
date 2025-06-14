@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify # Importe jsonify
 import psycopg2
 import os
 import secrets
@@ -94,6 +94,36 @@ def lista_chamada_adolescentes():
         data_para_exibir=data_para_exibir,
         chamadas_map=chamadas_map
     )
+
+# NOVA ROTA PARA AUTOCOMPLETE
+@app.route('/buscar_pessoas_autocomplete')
+def buscar_pessoas_autocomplete():
+    termo = request.args.get('term', '').lower()
+    tipo = request.args.get('tipo', '') # 'criança' ou 'adolescente'
+    conn = get_db_connection()
+    resultados = []
+    try:
+        with conn.cursor() as cursor:
+            if tipo:
+                cursor.execute(
+                    'SELECT id, nome, sobrenome FROM pessoas WHERE lower(tipo_cadastro) = %s AND (lower(nome) LIKE %s OR lower(sobrenome) LIKE %s) ORDER BY lower(nome) LIMIT 10',
+                    (tipo, f'%{termo}%', f'%{termo}%')
+                )
+            else: # Caso a busca seja geral (não recomendado para autocomplete de chamada)
+                cursor.execute(
+                    'SELECT id, nome, sobrenome FROM pessoas WHERE lower(nome) LIKE %s OR lower(sobrenome) LIKE %s ORDER BY lower(nome) LIMIT 10',
+                    (f'%{termo}%', f'%{termo}%')
+                )
+            
+            for row in cursor.fetchall():
+                nome_completo = f"{row[1]} {row[2]}" if row[2] else row[1]
+                resultados.append({'id': row[0], 'label': nome_completo, 'value': nome_completo})
+    except Exception as e:
+        print(f"Erro na busca autocomplete: {e}")
+    finally:
+        conn.close()
+    return jsonify(resultados)
+
 
 @app.route('/cadastro', methods=('GET', 'POST'))
 def cadastro():
