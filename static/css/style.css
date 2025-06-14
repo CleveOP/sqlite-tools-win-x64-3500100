@@ -629,3 +629,20 @@ button.save-button:hover {
         gap: 10px;
     }
 }
+
+/* Para destacar a linha encontrada pelo autocomplete */
+.destaque-autocomplete {
+    background-color: #fff9c4 !important;
+    transition: background-color 0.5s;
+}
+/* Opcional: estilizar a search-box */
+.search-box {
+    margin: 16px 0;
+}
+.search-box input[type="text"] {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #bbb;
+    width: 260px;
+    font-size: 1em;
+}
