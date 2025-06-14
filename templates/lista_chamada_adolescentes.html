@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <title>Chamada de Adolescentes - ONG</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
-    {# Ordem CORRETA: CSS primeiro, depois jQuery Core JS, depois jQuery UI JS #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.min.css') }}"> 
-    
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> {# <-- jQuery Core DEVE vir primeiro #}
-    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script> {# <-- jQuery UI vem DEPOIS do core #}
 </head>
 <body>
     <div class="container">
@@ -38,8 +32,9 @@
         </form>
 
         <div class="search-box">
-            <label for="search_crianca">Buscar Criança:</label>
-            <input type="text" id="search_crianca" placeholder="Digite parte do nome..." autocomplete="off">
+            <label for="busca_nome_adolescente">Buscar Adolescente:</label>
+            <input type="text" id="busca_nome_adolescente" autocomplete="off" placeholder="Digite parte do nome...">
+            <div id="sugestoes_adolescente" class="autocomplete-sugestoes"></div>
         </div>
 
         <h2>Chamada para Adolescentes em: {{ data_para_exibir }}</h2>
@@ -93,46 +88,45 @@
     </div>
 
     <script>
-        $(function() {
-            $("#search_adolescente").autocomplete({
-                source: function(request, response) {
-                    $.ajax({
-                        url: "{{ url_for('buscar_pessoas_autocomplete') }}",
-                        dataType: "json",
-                        data: {
-                            term: request.term,
-                            tipo: 'criança'
-                        },
-                        success: function(data) {
-                            response(data);
-                        }
-                    });
-                },
-                minLength: 2,
-                select: function(event, ui) {
-                    var pessoaId = ui.item.id;
-                    var targetElement = $('#pessoa-' + pessoaId);
-                    if (targetElement.length) {
-                        $('html, body').animate({
-                            scrollTop: targetElement.offset().top - 100
-                        }, 500);
-                        targetElement.addClass('destaque-autocomplete');
-                        setTimeout(function() {
-                            targetElement.removeClass('destaque-autocomplete');
-                        }, 2000);
-                    }
-                    // Evita submit do form ao pressionar Enter
-                    event.preventDefault();
-                }
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('busca_nome_adolescente');
+    const sugestoes = document.getElementById('sugestoes_adolescente');
 
-            // Evita submit do form ao pressionar Enter no campo de busca
-            $("#search_adolescente").keydown(function(e) {
-                if (e.keyCode === 13) {
-                    e.preventDefault();
-                }
+    input.addEventListener('input', function() {
+        const termo = input.value.trim();
+        if (termo.length < 2) {
+            sugestoes.innerHTML = '';
+            return;
+        }
+        fetch(`{{ url_for('buscar_pessoas_autocomplete') }}?term=${encodeURIComponent(termo)}&tipo=adolescente`)
+            .then(resp => resp.json())
+            .then(data => {
+                sugestoes.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.textContent = item.label;
+                    div.dataset.id = item.id;
+                    div.addEventListener('click', function() {
+                        const linha = document.getElementById('pessoa-' + item.id);
+                        if (linha) {
+                            linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            linha.classList.add('destaque-autocomplete');
+                            setTimeout(() => linha.classList.remove('destaque-autocomplete'), 2000);
+                        }
+                        input.value = item.label;
+                        sugestoes.innerHTML = '';
+                    });
+                    sugestoes.appendChild(div);
+                });
             });
-        });
-    </script>
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !sugestoes.contains(e.target)) {
+            sugestoes.innerHTML = '';
+        }
+    });
+});
+</script>
 </body>
 </html>
