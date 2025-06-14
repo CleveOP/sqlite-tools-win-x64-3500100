@@ -282,10 +282,63 @@ def excluir_pessoa(pessoa_id):
 def balanco_chamadas():
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        cursor.execute('SELECT data, status, COUNT(*) FROM chamadas GROUP BY data, status ORDER BY data DESC')
-        balanco = cursor.fetchall()
+        # Crianças
+        cursor.execute("""
+            SELECT p.id, p.nome, p.sobrenome,
+                SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
+                SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
+                SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados,
+                COUNT(c.id) AS total_chamadas_registradas
+            FROM pessoas p
+            LEFT JOIN chamadas c ON p.id = c.pessoa_id
+            WHERE lower(p.tipo_cadastro) = 'criança'
+            GROUP BY p.id, p.nome, p.sobrenome
+            ORDER BY lower(p.nome)
+        """)
+        balanco_criancas = [
+            {
+                "id": row[0],
+                "nome": row[1],
+                "sobrenome": row[2],
+                "total_presencas": row[3] or 0,
+                "total_faltas": row[4] or 0,
+                "total_justificados": row[5] or 0,
+                "total_chamadas_registradas": row[6] or 0,
+            }
+            for row in cursor.fetchall()
+        ]
+
+        # Adolescentes
+        cursor.execute("""
+            SELECT p.id, p.nome, p.sobrenome,
+                SUM(CASE WHEN c.status = 'Presente' THEN 1 ELSE 0 END) AS total_presencas,
+                SUM(CASE WHEN c.status = 'Falta' THEN 1 ELSE 0 END) AS total_faltas,
+                SUM(CASE WHEN c.status = 'Justificado' THEN 1 ELSE 0 END) AS total_justificados,
+                COUNT(c.id) AS total_chamadas_registradas
+            FROM pessoas p
+            LEFT JOIN chamadas c ON p.id = c.pessoa_id
+            WHERE lower(p.tipo_cadastro) = 'adolescente'
+            GROUP BY p.id, p.nome, p.sobrenome
+            ORDER BY lower(p.nome)
+        """)
+        balanco_adolescentes = [
+            {
+                "id": row[0],
+                "nome": row[1],
+                "sobrenome": row[2],
+                "total_presencas": row[3] or 0,
+                "total_faltas": row[4] or 0,
+                "total_justificados": row[5] or 0,
+                "total_chamadas_registradas": row[6] or 0,
+            }
+            for row in cursor.fetchall()
+        ]
     conn.close()
-    return render_template('balanco_chamadas.html', balanco=balanco)
+    return render_template(
+        'balanco_chamadas.html',
+        balanco_criancas=balanco_criancas,
+        balanco_adolescentes=balanco_adolescentes
+    )
 
 @app.route('/atualizar_ou_criar_chamada', methods=['POST'])
 def atualizar_ou_criar_chamada():
