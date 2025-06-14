@@ -205,9 +205,9 @@ form textarea {
         width: 100%;
     }
     th, td {
-        min-width: 80px;
+        min-width: 70px;
         max-width: 100vw;
-        font-size: 0.97em;
+        font-size: 0.85em;
     }
 }
 
@@ -668,4 +668,12 @@ button.save-button:hover {
 .search-box {
     position: relative;
     margin-bottom: 16px;
+}
+
+/* Ajuste para telas pequenas (máx-width: 400px) */
+@media (max-width: 400px) {
+    .autocomplete-sugestoes {
+        width: 98vw;
+        left: 1vw;
+    }
 }
