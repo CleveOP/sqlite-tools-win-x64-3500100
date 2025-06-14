@@ -1,4 +1,3 @@
-<!-- filepath: c:\Users\cleve\OneDrive\Área de Trabalho\sqlite-tools-win-x64-3500100\templates\cadastro.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -46,7 +45,7 @@
             <label for="tipo_cadastro">Tipo de Cadastro:</label>
             <select name="tipo_cadastro" id="tipo_cadastro">
                 <option value="">Selecione</option>
-                <option value="crianca" {% if pessoa and pessoa.tipo_cadastro == 'crianca' %}selected{% endif %}>Criança</option>
+                <option value="criança" {% if pessoa and pessoa.tipo_cadastro == 'criança' %}selected{% endif %}>Criança</option>
                 <option value="adolescente" {% if pessoa and pessoa.tipo_cadastro == 'adolescente' %}selected{% endif %}>Adolescente</option>
                 <option value="adulto" {% if pessoa and pessoa.tipo_cadastro == 'adulto' %}selected{% endif %}>Adulto</option>
             </select><br>
@@ -71,8 +70,6 @@
 
             <label for="nome_responsavel">Nome do Responsável:</label>
             <input type="text" name="nome_responsavel" id="nome_responsavel" value="{{ pessoa.nome_responsavel if pessoa else '' }}"><br>
-
-
 
             <label for="foto">Foto:</label>
             <input type="file" name="foto" id="foto" accept="image/*"><br>
