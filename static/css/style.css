@@ -677,3 +677,17 @@ button.save-button:hover {
         left: 1vw;
     }
 }
+
+@media (max-width: 600px) {
+    /* Deixa os radios de chamada em coluna */
+    td form {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    td form label {
+        width: 100%;
+        margin-bottom: 0;
+    }
+}
