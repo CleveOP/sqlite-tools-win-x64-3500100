@@ -44,14 +44,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                    
                         <th>Nome</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for pessoa in pessoas_adolescentes %}
-                    <tr id="pessoa-{{ pessoa.id }}"> <td>{{ pessoa.id }}</td>
+                    
                         <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                         <td>
                             <form action="{{ url_for('atualizar_ou_criar_chamada') }}" method="post" style="display:inline;">
