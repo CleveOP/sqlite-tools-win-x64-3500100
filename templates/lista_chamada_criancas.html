@@ -56,7 +56,7 @@
                         <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                         <td>
                             <form action="{{ url_for('atualizar_ou_criar_chamada') }}" method="post" style="display:inline;">
-                                <input type="hidden" name="pessoa_id" value="{{ pessoa.id }}">
+                                
                                 <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
                                 <label>
                                     <input type="radio" name="status" value="Presente"
