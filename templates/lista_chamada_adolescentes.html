@@ -51,7 +51,7 @@
                 </thead>
                 <tbody>
                     {% for pessoa in pessoas_adolescentes %}
-                    
+                    <tr id="pessoa-{{ pessoa.id }}">
                         <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                         <td>
                             <form action="{{ url_for('atualizar_ou_criar_chamada') }}" method="post" style="display:inline;">
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         fetch(`{{ url_for('buscar_pessoas_autocomplete') }}?term=${encodeURIComponent(termo)}&tipo=adolescente`)
             .then(resp => resp.json())
-            .then(data => {
+            .then data => {
                 sugestoes.innerHTML = '';
                 data.forEach(item => {
                     const div = document.createElement('div');

@@ -52,11 +52,11 @@
                 </thead>
                 <tbody>
                     {% for pessoa in pessoas_criancas %}
-                    
+                    <tr id="pessoa-{{ pessoa.id }}">
                         <td>{{ pessoa.nome }} {{ pessoa.sobrenome if pessoa.sobrenome else '' }}</td>
                         <td>
                             <form action="{{ url_for('atualizar_ou_criar_chamada') }}" method="post" style="display:inline;">
-                                
+                                <input type="hidden" name="pessoa_id" value="{{ pessoa.id }}">
                                 <input type="hidden" name="data_chamada" value="{{ data_para_exibir }}">
                                 <label>
                                     <input type="radio" name="status" value="Presente"
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         fetch(`{{ url_for('buscar_pessoas_autocomplete') }}?term=${encodeURIComponent(termo)}&tipo=criança`)
             .then(resp => resp.json())
-            .then(data => {
+            .then data => {
                 sugestoes.innerHTML = '';
                 data.forEach(item => {
                     const div = document.createElement('div');
